@@ -13,11 +13,21 @@ export function Card({
 }) {
   return (
     <section className={`flex flex-col border border-border bg-card ${className}`}>
-      <header className="flex items-center justify-between border-b border-border px-4 py-2.5">
-        <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          {title}
-        </h3>
-        {action}
+      <header className="flex items-center justify-between border-b border-border bg-[#0b0d11] px-3 py-2">
+        <div className="flex items-center gap-2 overflow-hidden">
+          <span className="text-primary/70">▍</span>
+          <h3 className="truncate font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            {title}
+          </h3>
+        </div>
+        <div className="flex items-center gap-2">
+          {action}
+          <span className="hidden items-center gap-1 sm:flex">
+            <span className="h-2 w-2 rounded-full bg-primary/60" />
+            <span className="h-2 w-2 rounded-full bg-border" />
+            <span className="h-2 w-2 rounded-full bg-border" />
+          </span>
+        </div>
       </header>
       <div className="flex-1 p-4">{children}</div>
     </section>
@@ -37,18 +47,14 @@ export function Stat({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+      <span className="font-mono text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
         {label}
       </span>
       <span className="font-mono text-xl font-semibold tracking-tight text-foreground">
         {value}
       </span>
       {delta && (
-        <span
-          className={`font-mono text-[11px] ${
-            positive ? "text-primary" : "text-[#ef4444]"
-          }`}
-        >
+        <span className={`font-mono text-[11px] ${positive ? "text-primary" : "text-[#ef4444]"}`}>
           {positive ? "▲" : "▼"} {delta}
         </span>
       )}

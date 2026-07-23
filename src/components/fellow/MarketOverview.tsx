@@ -1,33 +1,68 @@
+import { Link } from "@tanstack/react-router";
+
+import { TokenIcon } from "@/components/markets/TokenIcon";
+import { useMarkets } from "@/hooks/useMarkets";
+import { useBlockNumber } from "@/hooks/useBlockNumber";
 import { Card, Stat } from "./Card";
 
-const trending = [
-  { pair: "ETH / USDG", apr: "24.8%", tvl: "$18.2M" },
-  { pair: "BTC / USDG", apr: "19.2%", tvl: "$12.7M" },
-  { pair: "SOL / USDG", apr: "31.4%", tvl: "$6.4M" },
-  { pair: "RHC / ETH", apr: "42.1%", tvl: "$4.1M" },
-];
+function formatUSD(value: number | null, digits = 1) {
+  if (value == null) return "—";
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(digits)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(digits)}K`;
+  return `$${value.toFixed(2)}`;
+}
+
+function formatPrice(value: number | null) {
+  if (value == null) return "—";
+  if (value >= 1) return `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  return `$${value.toPrecision(3)}`;
+}
 
 export function MarketOverview() {
+  const { data: markets, isLoading } = useMarkets();
+  const block = useBlockNumber();
+
+  const total24hVolume = markets?.reduce((sum, m) => sum + (m.volume24h ?? 0), 0) ?? null;
+  // Markets already arrive sorted by 24h volume (most active first).
+  const trending = (markets ?? []).slice(0, 6);
+
   return (
     <Card title="Market Overview">
       <div className="grid grid-cols-3 gap-6">
-        <Stat label="Network TVL" value="$1.24B" delta="0.82%" positive />
-        <Stat label="24H Volume" value="$318.4M" delta="4.12%" positive />
-        <Stat label="Top APR" value="42.1%" />
+        <Stat label="24h Volume" value={isLoading ? "…" : formatUSD(total24hVolume)} />
+        <Stat label="Markets" value={isLoading ? "…" : String(markets?.length ?? 0)} />
+        <Stat label="Block" value={block} />
       </div>
-      <div className="mt-6 border-t border-border pt-4">
-        <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          Trending Pools
+      <div className="mt-5 border-t border-border pt-4">
+        <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Most Active
         </p>
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border/60">
+          {isLoading && trending.length === 0 && (
+            <p className="py-2.5 font-mono text-xs text-muted-foreground">
+              <span className="text-primary">▸</span> scanning…
+            </p>
+          )}
+          {!isLoading && trending.length === 0 && (
+            <p className="py-2.5 font-mono text-xs text-muted-foreground">No pools found on-chain.</p>
+          )}
           {trending.map((t) => (
-            <div key={t.pair} className="flex items-center justify-between py-2.5">
-              <span className="text-xs font-medium text-foreground">{t.pair}</span>
+            <Link
+              to="/markets/$symbol"
+              params={{ symbol: t.symbol }}
+              key={t.address}
+              className="flex items-center justify-between py-2 transition hover:bg-primary/5"
+            >
+              <span className="flex items-center gap-2.5">
+                <TokenIcon symbol={t.symbol} logo={t.logo} size={20} />
+                <span className="font-mono text-xs font-medium text-foreground">{t.symbol}</span>
+                <span className="font-mono text-[10px] text-muted-foreground">{t.pair}</span>
+              </span>
               <div className="flex items-center gap-6 font-mono text-xs">
-                <span className="text-muted-foreground">{t.tvl}</span>
-                <span className="w-14 text-right text-primary">{t.apr}</span>
+                <span className="text-muted-foreground">{formatUSD(t.volume24h)}</span>
+                <span className="w-20 text-right text-primary">{formatPrice(t.price)}</span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

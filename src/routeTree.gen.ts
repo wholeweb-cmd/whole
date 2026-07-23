@@ -10,33 +10,127 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AssistantRouteImport } from './routes/assistant'
+import { Route as LiquidityRouteImport } from './routes/liquidity'
+import { Route as MarketsRouteImport } from './routes/markets'
+import { Route as PortfolioRouteImport } from './routes/portfolio'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SwapRouteImport } from './routes/swap'
+import { Route as MarketsSymbolRouteImport } from './routes/markets.$symbol'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AssistantRoute = AssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiquidityRoute = LiquidityRouteImport.update({
+  id: '/liquidity',
+  path: '/liquidity',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketsRoute = MarketsRouteImport.update({
+  id: '/markets',
+  path: '/markets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortfolioRoute = PortfolioRouteImport.update({
+  id: '/portfolio',
+  path: '/portfolio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SwapRoute = SwapRouteImport.update({
+  id: '/swap',
+  path: '/swap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketsSymbolRoute = MarketsSymbolRouteImport.update({
+  id: '/$symbol',
+  path: '/$symbol',
+  getParentRoute: () => MarketsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/liquidity': typeof LiquidityRoute
+  '/markets': typeof MarketsRouteWithChildren
+  '/portfolio': typeof PortfolioRoute
+  '/settings': typeof SettingsRoute
+  '/swap': typeof SwapRoute
+  '/markets/$symbol': typeof MarketsSymbolRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/liquidity': typeof LiquidityRoute
+  '/markets': typeof MarketsRouteWithChildren
+  '/portfolio': typeof PortfolioRoute
+  '/settings': typeof SettingsRoute
+  '/swap': typeof SwapRoute
+  '/markets/$symbol': typeof MarketsSymbolRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/liquidity': typeof LiquidityRoute
+  '/markets': typeof MarketsRouteWithChildren
+  '/portfolio': typeof PortfolioRoute
+  '/settings': typeof SettingsRoute
+  '/swap': typeof SwapRoute
+  '/markets/$symbol': typeof MarketsSymbolRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/assistant'
+    | '/liquidity'
+    | '/markets'
+    | '/portfolio'
+    | '/settings'
+    | '/swap'
+    | '/markets/$symbol'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/assistant'
+    | '/liquidity'
+    | '/markets'
+    | '/portfolio'
+    | '/settings'
+    | '/swap'
+    | '/markets/$symbol'
+  id:
+    | '__root__'
+    | '/'
+    | '/assistant'
+    | '/liquidity'
+    | '/markets'
+    | '/portfolio'
+    | '/settings'
+    | '/swap'
+    | '/markets/$symbol'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AssistantRoute: typeof AssistantRoute
+  LiquidityRoute: typeof LiquidityRoute
+  MarketsRoute: typeof MarketsRouteWithChildren
+  PortfolioRoute: typeof PortfolioRoute
+  SettingsRoute: typeof SettingsRoute
+  SwapRoute: typeof SwapRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +142,77 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/assistant': {
+      id: '/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AssistantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/liquidity': {
+      id: '/liquidity'
+      path: '/liquidity'
+      fullPath: '/liquidity'
+      preLoaderRoute: typeof LiquidityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/markets': {
+      id: '/markets'
+      path: '/markets'
+      fullPath: '/markets'
+      preLoaderRoute: typeof MarketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portfolio': {
+      id: '/portfolio'
+      path: '/portfolio'
+      fullPath: '/portfolio'
+      preLoaderRoute: typeof PortfolioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/swap': {
+      id: '/swap'
+      path: '/swap'
+      fullPath: '/swap'
+      preLoaderRoute: typeof SwapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/markets/$symbol': {
+      id: '/markets/$symbol'
+      path: '/$symbol'
+      fullPath: '/markets/$symbol'
+      preLoaderRoute: typeof MarketsSymbolRouteImport
+      parentRoute: typeof MarketsRoute
+    }
   }
 }
 
+interface MarketsRouteChildren {
+  MarketsSymbolRoute: typeof MarketsSymbolRoute
+}
+
+const MarketsRouteChildren: MarketsRouteChildren = {
+  MarketsSymbolRoute: MarketsSymbolRoute,
+}
+
+const MarketsRouteWithChildren =
+  MarketsRoute._addFileChildren(MarketsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AssistantRoute: AssistantRoute,
+  LiquidityRoute: LiquidityRoute,
+  MarketsRoute: MarketsRouteWithChildren,
+  PortfolioRoute: PortfolioRoute,
+  SettingsRoute: SettingsRoute,
+  SwapRoute: SwapRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

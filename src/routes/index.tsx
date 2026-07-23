@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Header } from "@/components/fellow/Header";
-import { Sidebar } from "@/components/fellow/Sidebar";
-import { ContextPanel } from "@/components/fellow/ContextPanel";
-import { CommandBar } from "@/components/fellow/CommandBar";
+
 import { PortfolioSummary } from "@/components/fellow/PortfolioSummary";
 import { MarketOverview } from "@/components/fellow/MarketOverview";
 import { LiquidityPositions } from "@/components/fellow/LiquidityPositions";
 import { RecentActivity } from "@/components/fellow/RecentActivity";
+import { MarketTable } from "@/components/fellow/MarketTable";
+import { PriceChart } from "@/components/chart/PriceChart";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -31,31 +30,29 @@ export const Route = createFileRoute("/")({
 
 function Workspace() {
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
-      <Header />
-      <div className="flex min-h-0 flex-1">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto pb-36">
-          <div className="mx-auto flex max-w-6xl flex-col gap-4 p-4 md:p-6">
-            <div className="flex flex-col gap-1">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                Home
-              </p>
-              <h1 className="text-xl font-semibold tracking-tight text-foreground">
-                Workspace
-              </h1>
-            </div>
-            <PortfolioSummary />
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <MarketOverview />
-              <RecentActivity />
-            </div>
-            <LiquidityPositions />
-          </div>
-        </main>
-        <ContextPanel />
+    <div className="mx-auto flex max-w-7xl flex-col gap-4 p-4 md:p-6">
+      <div className="flex flex-col gap-1">
+        <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
+          <span className="text-muted-foreground">fellow@robinhood-chain</span>:~ $
+        </p>
+        <h1 className="font-mono text-xl font-semibold tracking-tight text-foreground">Dashboard</h1>
       </div>
-      <CommandBar />
+
+      <PortfolioSummary />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <PriceChart symbol="WETH" />
+        </div>
+        <MarketOverview />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <RecentActivity />
+        <LiquidityPositions />
+      </div>
+
+      <MarketTable />
     </div>
   );
 }

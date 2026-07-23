@@ -1,3 +1,5 @@
+import { PrivyProvider } from "@privy-io/react-auth";
+import { WagmiProvider } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -11,6 +13,11 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { wagmiConfig } from "../lib/web3/wagmiConfig";
+import { robinhood } from "../lib/web3/client";
+import { Toaster } from "../components/ui/sonner";
+import { NetworkGuard } from "../components/fellow/NetworkGuard";
+import { WorkspaceLayout } from "../components/fellow/WorkspaceLayout";
 
 function NotFoundComponent() {
   return (
@@ -119,8 +126,47 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <PrivyProvider
+        appId={import.meta.env.VITE_PRIVY_APP_ID}
+        config={{
+          appearance: {
+            theme: "dark",
+            accentColor: "#B8FF00",
+            // Force the wallet options shown in the modal instead of relying on
+            // the dashboard default (which can render an empty modal). Includes
+            // Robinhood's own wallet, any detected browser extension, and
+            // WalletConnect so users without an extension can still connect.
+            walletList: [
+              "detected_ethereum_wallets",
+              "metamask",
+              "coinbase_wallet",
+              "wallet_connect",
+              "robinhood_wallet",
+            ],
+          },
+          embeddedWallets: {
+            ethereum: {
+              // Login is wallet-only, so every user already brings their
+              // own wallet - no need to create one for them.
+              createOnLogin: "off",
+            },
+          },
+          loginMethods: ["wallet"],
+          // Robinhood Chain is a custom network - Privy must be told about it
+          // explicitly, otherwise the wallet-connect modal has no chain to
+          // target and closes immediately after opening.
+          defaultChain: robinhood,
+          supportedChains: [robinhood],
+        }}
+      >
+        <WagmiProvider config={wagmiConfig}>
+          <NetworkGuard />
+          <WorkspaceLayout>
+            <Outlet />
+          </WorkspaceLayout>
+          <Toaster position="bottom-right" theme="dark" />
+        </WagmiProvider>
+      </PrivyProvider>
     </QueryClientProvider>
   );
 }
