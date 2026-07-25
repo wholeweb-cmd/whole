@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import { encodeFunctionData, parseUnits } from "viem";
 import { toast } from "sonner";
@@ -10,6 +11,8 @@ import { UNISWAP } from "@/lib/uniswap/addresses";
 import { robinhood } from "@/lib/web3/client";
 import { encodePath, isSingleHop, type Route, type SwapToken } from "@/lib/uniswap/route";
 import { useActivityStore } from "@/lib/store/activityStore";
+import { BALANCE_QUERY_KEY } from "./useERC20Balance";
+import { SERVICE_FEE_BIPS, SERVICE_FEE_RECIPIENT } from "@/lib/config/swapFee";
 
 export type SwapStep = "idle" | "approving" | "swapping" | "success" | "error";
 
@@ -19,7 +22,7 @@ interface ExecuteParams {
   tokenIn: SwapToken;
   tokenOut: SwapToken;
   amountIn: string;
-  amountOut: string;
+  grossAmountOut: string;
   slippage: number;
   route: Route;
 }
@@ -40,8 +43,16 @@ export function useSwapExecute() {
 
   const addActivity = useActivityStore((s) => s.add);
   const updateActivity = useActivityStore((s) => s.update);
+  const queryClient = useQueryClient();
 
-  async function execute({ tokenIn, tokenOut, amountIn, amountOut, slippage, route }: ExecuteParams) {
+  async function execute({
+    tokenIn,
+    tokenOut,
+    amountIn,
+    grossAmountOut,
+    slippage,
+    route,
+  }: ExecuteParams) {
     if (!address) {
       setError("Connect your wallet first");
       setStep("error");
@@ -59,9 +70,9 @@ export function useSwapExecute() {
 
     try {
       const amountInWei = parseUnits(amountIn, tokenIn.decimals);
-      const minOutNumber = Math.max(Number(amountOut || "0") * (1 - slippage / 100), 0);
-      const amountOutMinimum =
-        minOutNumber > 0 ? parseUnits(minOutNumber.toFixed(tokenOut.decimals), tokenOut.decimals) : 0n;
+      const grossAmountOutWei = parseUnits(grossAmountOut || "0", tokenOut.decimals);
+      const slippageBips = BigInt(Math.max(0, Math.min(10_000, Math.round(slippage * 100))));
+      const amountOutMinimum = (grossAmountOutWei * (10_000n - slippageBips)) / 10_000n;
 
       const nativeIn = tokenIn.isNative;
       const nativeOut = tokenOut.isNative;
@@ -86,10 +97,9 @@ export function useSwapExecute() {
 
       setStep("swapping");
 
-      // When the output is native ETH the router must receive the WETH first,
-      // then unwrap it to the user - so recipient is the router and the call is
-      // wrapped in a multicall with unwrapWETH9.
-      const recipient = nativeOut ? ROUTER : (address as `0x${string}`);
+      // Receive the gross output in the router, then atomically settle the net
+      // amount to the user and the disclosed service fee to the treasury.
+      const recipient = ROUTER;
 
       const swapData = isSingleHop(route)
         ? encodeFunctionData({
@@ -101,7 +111,6 @@ export function useSwapExecute() {
                 tokenOut: route.nodes[1],
                 fee: route.fees[0],
                 recipient,
-                deadline,
                 amountIn: amountInWei,
                 amountOutMinimum,
                 sqrtPriceLimitX96: 0n,
@@ -115,67 +124,79 @@ export function useSwapExecute() {
               {
                 path: encodePath(route),
                 recipient,
-                deadline,
                 amountIn: amountInWei,
                 amountOutMinimum,
               },
             ],
           });
 
-      let hash: `0x${string}`;
+      const settlementData = nativeOut
+        ? encodeFunctionData({
+            abi: SWAP_ROUTER_ABI,
+            functionName: "unwrapWETH9WithFee",
+            args: [
+              amountOutMinimum,
+              address as `0x${string}`,
+              SERVICE_FEE_BIPS,
+              SERVICE_FEE_RECIPIENT,
+            ],
+          })
+        : encodeFunctionData({
+            abi: SWAP_ROUTER_ABI,
+            functionName: "sweepTokenWithFee",
+            args: [
+              tokenOut.address,
+              amountOutMinimum,
+              address as `0x${string}`,
+              SERVICE_FEE_BIPS,
+              SERVICE_FEE_RECIPIENT,
+            ],
+          });
+      const calls = [swapData, settlementData];
+      const transactionData = encodeFunctionData({
+        abi: SWAP_ROUTER_ABI,
+        functionName: "multicall",
+        args: [deadline, calls],
+      });
+      const transactionValue = nativeIn ? amountInWei : undefined;
 
-      if (nativeOut) {
-        const unwrapData = encodeFunctionData({
-          abi: SWAP_ROUTER_ABI,
-          functionName: "unwrapWETH9",
-          args: [amountOutMinimum, address as `0x${string}`],
-        });
-        hash = await writeContractAsync({
-          address: ROUTER,
-          abi: SWAP_ROUTER_ABI,
-          functionName: "multicall",
-          args: [[swapData, unwrapData]],
-          value: nativeIn ? amountInWei : undefined,
-          chainId: robinhood.id,
-        });
-      } else if (isSingleHop(route)) {
-        hash = await writeContractAsync({
-          address: ROUTER,
-          abi: SWAP_ROUTER_ABI,
-          functionName: "exactInputSingle",
-          args: [
-            {
-              tokenIn: route.nodes[0],
-              tokenOut: route.nodes[1],
-              fee: route.fees[0],
-              recipient,
-              deadline,
-              amountIn: amountInWei,
-              amountOutMinimum,
-              sqrtPriceLimitX96: 0n,
-            },
-          ],
-          value: nativeIn ? amountInWei : undefined,
-          chainId: robinhood.id,
-        });
-      } else {
-        hash = await writeContractAsync({
-          address: ROUTER,
-          abi: SWAP_ROUTER_ABI,
-          functionName: "exactInput",
-          args: [
-            {
-              path: encodePath(route),
-              recipient,
-              deadline,
-              amountIn: amountInWei,
-              amountOutMinimum,
-            },
-          ],
-          value: nativeIn ? amountInWei : undefined,
-          chainId: robinhood.id,
-        });
+      // Simulate the exact calldata immediately before opening the wallet.
+      // Supplying a modest 15% safety margin prevents wallets from inventing
+      // a much larger gas limit while still leaving room for state changes.
+      let gas: bigint | undefined;
+      let maxFeePerGas: bigint | undefined;
+      let maxPriorityFeePerGas: bigint | undefined;
+      if (publicClient) {
+        try {
+          const [estimatedGas, estimatedFees] = await Promise.all([
+            publicClient.estimateGas({
+              account: address as `0x${string}`,
+              to: ROUTER,
+              data: transactionData,
+              value: transactionValue,
+            }),
+            publicClient.estimateFeesPerGas(),
+          ]);
+          gas = (estimatedGas * 115n) / 100n;
+          maxFeePerGas = estimatedFees.maxFeePerGas;
+          maxPriorityFeePerGas = estimatedFees.maxPriorityFeePerGas;
+        } catch {
+          // The connected wallet can still estimate if the public RPC is
+          // temporarily behind or refuses the simulation.
+        }
       }
+
+      const hash = await writeContractAsync({
+        address: ROUTER,
+        abi: SWAP_ROUTER_ABI,
+        functionName: "multicall",
+        args: [deadline, calls],
+        value: transactionValue,
+        chainId: robinhood.id,
+        gas,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+      });
 
       setTxHash(hash);
       updateActivity(activityId, { hash });
@@ -183,6 +204,9 @@ export function useSwapExecute() {
 
       setStep("success");
       updateActivity(activityId, { status: "success" });
+      // Both sides of the trade just moved - re-read them instead of leaving
+      // the pre-swap numbers on screen until the next poll.
+      queryClient.invalidateQueries({ queryKey: [BALANCE_QUERY_KEY] });
       toast.success(`Swapped ${amountIn} ${tokenIn.symbol} for ${tokenOut.symbol}`);
     } catch (err) {
       console.error(err);

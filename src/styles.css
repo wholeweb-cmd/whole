@@ -45,7 +45,10 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
@@ -65,26 +68,38 @@
 }
 
 :root {
-  --radius: 0.5rem;
-  --background: #0a0e1a;
+  /* Drives the whole radius scale in @theme above:
+     sm 8px · md 10px · lg 12px · xl 16px · 2xl 20px · 3xl 24px.
+     Panels use xl, inner tiles lg, chips and buttons sm. */
+  --radius: 0.75rem;
+
+  --background: #070910;
   --foreground: #ffffff;
-  --surface: #101216;
-  --card: #101216;
+
+  /* Panels are a two-stop gradient from `surface-raised` down to `card`,
+     which is what gives them their lit-from-above look. */
+  --surface: #0d1017;
+  --surface-raised: #14181f;
+  --card: #0d1017;
   --card-foreground: #ffffff;
-  --popover: #101216;
+  --popover: #14181f;
   --popover-foreground: #ffffff;
   --primary: #B8FF00;
   --primary-foreground: #050505;
-  --secondary: #101216;
+  --secondary: #14181f;
   --secondary-foreground: #ffffff;
-  --muted: #101216;
-  --muted-foreground: #9CA3AF;
-  --accent: #101216;
+  --muted: #14181f;
+  --muted-foreground: #98a1b3;
+  --accent: #14181f;
   --accent-foreground: #ffffff;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #252933;
-  --input: #252933;
+
+  /* Translucent so borders sit on whatever surface is behind them instead of
+     drawing a hard seam the way the old flat #252933 did. */
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --input: rgba(255, 255, 255, 0.12);
   --ring: #B8FF00;
   --success: #B8FF00;
   --danger: #ef4444;
@@ -146,5 +161,49 @@
   body {
     color: var(--color-foreground);
     background-color: var(--color-background);
+  }
+}
+
+/*
+ * Surface vocabulary.
+ *
+ * Three classes carry the app's depth: `surface-panel` for top-level cards,
+ * `surface-head` for their title strips, and `surface-tile` for the boxes
+ * nested inside them. Radius, borders and padding stay in the markup as
+ * Tailwind utilities - only the gradients and shadows live here, because
+ * they're what would otherwise be repeated verbatim across ~30 files.
+ */
+@layer components {
+  .surface-panel {
+    background-image: linear-gradient(180deg, var(--surface-raised) 0%, var(--card) 60%);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+      0 16px 40px -24px rgba(0, 0, 0, 0.9);
+  }
+
+  .surface-head {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0));
+  }
+
+  .surface-tile {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0));
+  }
+
+  /* Neon bloom for primary actions and the active nav item. */
+  .glow-primary {
+    box-shadow: 0 8px 28px -10px color-mix(in oklab, var(--primary) 65%, transparent);
+  }
+
+  .glow-primary-hover {
+    transition:
+      box-shadow 200ms ease,
+      transform 200ms ease,
+      border-color 200ms ease,
+      background-color 200ms ease;
+  }
+
+  .glow-primary-hover:hover {
+    box-shadow: 0 10px 30px -14px color-mix(in oklab, var(--primary) 55%, transparent);
+    transform: translateY(-1px);
   }
 }

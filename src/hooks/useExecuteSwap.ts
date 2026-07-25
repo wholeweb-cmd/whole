@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAccount, usePublicClient, useWriteContract } from "wagmi";
-import { parseUnits } from "viem";
+import { encodeFunctionData, parseUnits } from "viem";
 import { toast } from "sonner";
 
 import { getAllowance } from "@/lib/uniswap/read";
@@ -106,8 +106,7 @@ export function useExecuteSwap() {
 
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 60 * 20);
 
-      const swapHash = await writeContractAsync({
-        address: UNISWAP.swapRouter as `0x${string}`,
+      const swapData = encodeFunctionData({
         abi: SWAP_ROUTER_ABI,
         functionName: "exactInputSingle",
         args: [
@@ -116,12 +115,18 @@ export function useExecuteSwap() {
             tokenOut: tokenOutAddress,
             fee,
             recipient: address as `0x${string}`,
-            deadline,
             amountIn: amountInWei,
             amountOutMinimum,
             sqrtPriceLimitX96: 0n,
           },
         ],
+      });
+
+      const swapHash = await writeContractAsync({
+        address: UNISWAP.swapRouter as `0x${string}`,
+        abi: SWAP_ROUTER_ABI,
+        functionName: "multicall",
+        args: [deadline, [swapData]],
         value: nativeIn ? amountInWei : undefined,
         chainId: robinhood.id,
       });

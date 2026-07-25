@@ -12,7 +12,6 @@ export const SWAP_ROUTER_ABI = [
           { name: "tokenOut", type: "address" },
           { name: "fee", type: "uint24" },
           { name: "recipient", type: "address" },
-          { name: "deadline", type: "uint256" },
           { name: "amountIn", type: "uint256" },
           { name: "amountOutMinimum", type: "uint256" },
           { name: "sqrtPriceLimitX96", type: "uint160" },
@@ -37,13 +36,22 @@ export const SWAP_ROUTER_ABI = [
         components: [
           { name: "path", type: "bytes" },
           { name: "recipient", type: "address" },
-          { name: "deadline", type: "uint256" },
           { name: "amountIn", type: "uint256" },
           { name: "amountOutMinimum", type: "uint256" },
         ],
       },
     ],
     outputs: [{ name: "amountOut", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "multicall",
+    stateMutability: "payable",
+    inputs: [
+      { name: "deadline", type: "uint256" },
+      { name: "data", type: "bytes[]" },
+    ],
+    outputs: [{ name: "results", type: "bytes[]" }],
   },
   {
     type: "function",
@@ -59,6 +67,31 @@ export const SWAP_ROUTER_ABI = [
     inputs: [
       { name: "amountMinimum", type: "uint256" },
       { name: "recipient", type: "address" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "unwrapWETH9WithFee",
+    stateMutability: "payable",
+    inputs: [
+      { name: "amountMinimum", type: "uint256" },
+      { name: "recipient", type: "address" },
+      { name: "feeBips", type: "uint256" },
+      { name: "feeRecipient", type: "address" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "sweepTokenWithFee",
+    stateMutability: "payable",
+    inputs: [
+      { name: "token", type: "address" },
+      { name: "amountMinimum", type: "uint256" },
+      { name: "recipient", type: "address" },
+      { name: "feeBips", type: "uint256" },
+      { name: "feeRecipient", type: "address" },
     ],
     outputs: [],
   },

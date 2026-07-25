@@ -33,16 +33,20 @@ export function TokenInput({
   const balance = useSwapBalance(token);
 
   return (
-    <div className="border border-border bg-background p-4 font-mono">
+    <div className="surface-tile rounded-lg border border-border bg-background/40 p-5 font-mono transition-colors focus-within:border-border-strong">
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</span>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-muted-foreground">bal {balance.toFixed(4)}</span>
-          {showMax && !readonly && balance > 0 && (
+          <span className="text-[11px] text-muted-foreground">
+            bal {balance.isLoading ? "…" : balance.value.toFixed(4)}
+          </span>
+          {showMax && !readonly && balance.raw > 0n && (
             <button
               type="button"
-              onClick={() => onAmountChange(String(balance))}
-              className="border border-border px-2 py-0.5 text-[10px] font-semibold text-primary transition hover:border-primary"
+              // The exact string, not the rounded display value - rounding up
+              // would ask the router to spend more than the wallet holds.
+              onClick={() => onAmountChange(balance.exact)}
+              className="rounded-full border border-border px-2.5 py-1 text-[10px] font-semibold text-primary transition hover:border-primary hover:bg-primary/10"
             >
               MAX
             </button>
@@ -63,9 +67,14 @@ export function TokenInput({
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="flex shrink-0 items-center gap-2 border border-border px-3 py-2 transition hover:border-primary"
+          className="surface-tile flex shrink-0 items-center gap-2 rounded-full border border-border bg-surface-raised px-3.5 py-2 transition hover:border-primary/60"
         >
-          <TokenIcon symbol={token?.symbol ?? "?"} logo={token?.logo} size={22} />
+          <TokenIcon
+            symbol={token?.symbol ?? "?"}
+            name={token?.name}
+            logo={token?.logo}
+            size={22}
+          />
           <span className="font-semibold">{token?.symbol ?? "Select"}</span>
           <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
         </button>

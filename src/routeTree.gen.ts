@@ -16,6 +16,7 @@ import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SwapRouteImport } from './routes/swap'
+import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as MarketsSymbolRouteImport } from './routes/markets.$symbol'
 
 const IndexRoute = IndexRouteImport.update({
@@ -53,6 +54,11 @@ const SwapRoute = SwapRouteImport.update({
   path: '/swap',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MarketsSymbolRoute = MarketsSymbolRouteImport.update({
   id: '/$symbol',
   path: '/$symbol',
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/portfolio': typeof PortfolioRoute
   '/settings': typeof SettingsRoute
   '/swap': typeof SwapRoute
+  '/wallet': typeof WalletRoute
   '/markets/$symbol': typeof MarketsSymbolRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/portfolio': typeof PortfolioRoute
   '/settings': typeof SettingsRoute
   '/swap': typeof SwapRoute
+  '/wallet': typeof WalletRoute
   '/markets/$symbol': typeof MarketsSymbolRoute
 }
 export interface FileRoutesById {
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/portfolio': typeof PortfolioRoute
   '/settings': typeof SettingsRoute
   '/swap': typeof SwapRoute
+  '/wallet': typeof WalletRoute
   '/markets/$symbol': typeof MarketsSymbolRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/settings'
     | '/swap'
+    | '/wallet'
     | '/markets/$symbol'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/settings'
     | '/swap'
+    | '/wallet'
     | '/markets/$symbol'
   id:
     | '__root__'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/settings'
     | '/swap'
+    | '/wallet'
     | '/markets/$symbol'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   PortfolioRoute: typeof PortfolioRoute
   SettingsRoute: typeof SettingsRoute
   SwapRoute: typeof SwapRoute
+  WalletRoute: typeof WalletRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SwapRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/markets/$symbol': {
       id: '/markets/$symbol'
       path: '/$symbol'
@@ -213,6 +233,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortfolioRoute: PortfolioRoute,
   SettingsRoute: SettingsRoute,
   SwapRoute: SwapRoute,
+  WalletRoute: WalletRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

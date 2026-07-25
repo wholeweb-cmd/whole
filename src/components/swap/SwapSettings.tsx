@@ -7,7 +7,7 @@ interface Props {
 
 export function SwapSettings({ slippage, onSlippageChange }: Props) {
   return (
-    <div className="mt-3 border border-border bg-background p-4 font-mono">
+    <div className="surface-tile mt-4 rounded-lg border border-border bg-background/40 p-5 font-mono">
       <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
         <Settings className="h-3.5 w-3.5" />
         Slippage Tolerance
@@ -19,10 +19,10 @@ export function SwapSettings({ slippage, onSlippageChange }: Props) {
             key={v}
             type="button"
             onClick={() => onSlippageChange(v)}
-            className={`px-3 py-1.5 text-sm transition ${
+            className={`rounded-full px-4 py-1.5 text-sm transition ${
               slippage === v
-                ? "bg-primary text-black"
-                : "border border-border hover:border-primary"
+                ? "glow-primary bg-primary text-primary-foreground"
+                : "border border-border hover:border-primary hover:bg-primary/10"
             }`}
           >
             {v}%
@@ -36,7 +36,7 @@ export function SwapSettings({ slippage, onSlippageChange }: Props) {
             onSlippageChange(Number.isFinite(parsed) ? parsed : 0);
           }}
           inputMode="decimal"
-          className="w-20 border border-border bg-transparent px-2 tabular-nums outline-none focus:border-primary/60"
+          className="w-20 rounded-full border border-border bg-transparent px-3 text-center tabular-nums outline-none transition focus:border-primary/60"
         />
       </div>
     </div>

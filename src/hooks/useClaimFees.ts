@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import { toast } from "sonner";
 
@@ -6,6 +7,9 @@ import { POSITION_MANAGER_ABI } from "@/lib/uniswap/abi/positionManager";
 import { UNISWAP } from "@/lib/uniswap/addresses";
 import { robinhood } from "@/lib/web3/client";
 import { useActivityStore } from "@/lib/store/activityStore";
+import { BALANCE_QUERY_KEY } from "./useERC20Balance";
+import { LIQUIDITY_POSITIONS_QUERY_KEY } from "./useLiquidityPositions";
+import { PORTFOLIO_QUERY_KEY } from "./usePortfolioData";
 
 export type ClaimFeesStep = "idle" | "claiming" | "success" | "error";
 
@@ -20,18 +24,21 @@ export function useClaimFees() {
 
   const [step, setStep] = useState<ClaimFeesStep>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [activeTokenId, setActiveTokenId] = useState<bigint | null>(null);
 
   const addActivity = useActivityStore((s) => s.add);
   const updateActivity = useActivityStore((s) => s.update);
+  const queryClient = useQueryClient();
 
   async function claimFees(tokenId: bigint, label = `Position #${tokenId}`) {
     if (!address) {
       setError("Connect your wallet first");
       setStep("error");
-      return;
+      return false;
     }
 
     setError(null);
+    setActiveTokenId(tokenId);
 
     const activityId = addActivity({
       type: "Claim Fees",
@@ -60,12 +67,19 @@ export function useClaimFees() {
       updateActivity(activityId, { hash });
 
       if (publicClient) {
-        await publicClient.waitForTransactionReceipt({ hash });
+        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+        if (receipt.status !== "success") throw new Error("The claim transaction was reverted");
       }
 
       setStep("success");
       updateActivity(activityId, { status: "success" });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [BALANCE_QUERY_KEY] }),
+        queryClient.invalidateQueries({ queryKey: [LIQUIDITY_POSITIONS_QUERY_KEY] }),
+        queryClient.invalidateQueries({ queryKey: [PORTFOLIO_QUERY_KEY] }),
+      ]);
       toast.success(`Claimed fees for ${label}`);
+      return true;
     } catch (err) {
       console.error(err);
       const message = err instanceof Error ? err.message : "Claiming fees failed";
@@ -74,6 +88,9 @@ export function useClaimFees() {
       setStep("error");
       updateActivity(activityId, { status: "error" });
       toast.error("Claim fees failed", { description: message.slice(0, 140) });
+      return false;
+    } finally {
+      setActiveTokenId(null);
     }
   }
 
@@ -86,6 +103,7 @@ export function useClaimFees() {
     claimFees,
     step,
     error,
+    activeTokenId,
     loading: step === "claiming",
     reset,
   };

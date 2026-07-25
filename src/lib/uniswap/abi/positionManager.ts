@@ -113,7 +113,7 @@ export const POSITION_MANAGER_ABI = [
 ] as const;
 
 // Well-known full-range tick bounds per fee-tier tick spacing, rounded to
-// the nearest usable tick. Used for the v1 "full range" add-liquidity flow
+// the nearest usable tick. Used for the v1 "full range" add-liquidity process
 // (no custom price range picker yet).
 export function getFullRangeTicks(fee: number) {
   switch (fee) {

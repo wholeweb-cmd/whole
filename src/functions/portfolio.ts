@@ -6,11 +6,13 @@ import { publicClient } from "@/lib/web3/client";
 import { ERC20_ABI } from "@/lib/uniswap/abi/erc20";
 import { getPositionsForOwner } from "@/lib/uniswap/liquidity";
 import { getTokenPriceUSD } from "@/lib/uniswap/market";
+import { getTokenMeta } from "@/lib/uniswap/tokenMeta";
 import { TOKENS } from "@/lib/tokens/index";
 
 export interface PortfolioAsset {
   symbol: string;
   name: string;
+  logo: string | null;
   amount: number;
   price: number | null;
   value: number | null;
@@ -42,7 +44,8 @@ export const fetchPortfolio = createServerFn({ method: "GET" })
     const [balances, positions] = await Promise.all([
       Promise.all(
         TOKENS.map(async (token) => {
-          const [rawBalance, price] = await Promise.all([
+          const metadataAddress = token.isNative ? token.wrapped : token.address;
+          const [rawBalance, price, metadata] = await Promise.all([
             token.isNative
               ? publicClient.getBalance({ address: wallet })
               : publicClient.readContract({
@@ -52,6 +55,9 @@ export const fetchPortfolio = createServerFn({ method: "GET" })
                   args: [wallet],
                 }),
             getTokenPriceUSD(token.symbol),
+            metadataAddress
+              ? getTokenMeta(metadataAddress).catch(() => null)
+              : Promise.resolve(null),
           ]);
 
           const amount = Number(formatUnits(rawBalance, token.decimals));
@@ -59,6 +65,7 @@ export const fetchPortfolio = createServerFn({ method: "GET" })
           const asset: PortfolioAsset = {
             symbol: token.symbol,
             name: token.name,
+            logo: metadata?.logo ?? token.logo ?? null,
             amount,
             price,
             value: price != null ? amount * price : null,

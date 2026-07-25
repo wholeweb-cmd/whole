@@ -16,8 +16,10 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { wagmiConfig } from "../lib/web3/wagmiConfig";
 import { robinhood } from "../lib/web3/client";
 import { Toaster } from "../components/ui/sonner";
-import { NetworkGuard } from "../components/fellow/NetworkGuard";
-import { WorkspaceLayout } from "../components/fellow/WorkspaceLayout";
+import { NetworkGuard } from "../components/whole/NetworkGuard";
+import { usePrivyOriginWarning } from "../hooks/usePrivyOriginWarning";
+import { WorkspaceLayout } from "../components/whole/WorkspaceLayout";
+import { WalletBalanceSync } from "../components/whole/WalletBalanceSync";
 
 function NotFoundComponent() {
   return (
@@ -84,14 +86,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "WHOLE" },
+      {
+        name: "description",
+        content: "Trade, provide liquidity, and explore markets on Robinhood Chain.",
+      },
+      { name: "author", content: "WHOLE" },
+      { property: "og:title", content: "WHOLE" },
+      {
+        property: "og:description",
+        content: "The DeFi workspace for Robinhood Chain.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -123,6 +130,8 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  usePrivyOriginWarning();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -160,6 +169,7 @@ function RootComponent() {
         }}
       >
         <WagmiProvider config={wagmiConfig}>
+          <WalletBalanceSync />
           <NetworkGuard />
           <WorkspaceLayout>
             <Outlet />

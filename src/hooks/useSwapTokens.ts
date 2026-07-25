@@ -20,6 +20,7 @@ export function useSwapTokens() {
   return useMemo(() => {
     const list = markets ?? [];
     const wethMarket = list.find((m) => m.address.toLowerCase() === WETH_ADDRESS);
+    const usdgMarket = list.find((m) => m.address.toLowerCase() === USDG_ADDRESS);
     const wethFee = wethMarket?.feeTier ?? ETH?.feeTier ?? 100;
 
     const tokens: SwapToken[] = [];
@@ -43,7 +44,7 @@ export function useSwapTokens() {
       name: USDG?.name ?? "Global Dollar",
       address: USDG_ADDRESS,
       decimals: USDG?.decimals ?? 6,
-      logo: null,
+      logo: usdgMarket?.logo ?? null,
       price: 1,
       feeTier: null,
       quoteSymbol: "USDG",

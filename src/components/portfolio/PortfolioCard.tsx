@@ -14,15 +14,15 @@ export function PortfolioCard() {
 
   if (!authenticated) {
     return (
-      <div className="border border-border bg-card">
-        <div className="border-b border-border bg-[#0b0d11] px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-primary">
-          ▍ Portfolio
+      <div className="surface-panel overflow-hidden rounded-xl border border-border">
+        <div className="surface-head border-b border-border px-5 py-3 font-mono text-[10px] uppercase tracking-widest text-primary">
+          ▍ Wallet
         </div>
         <div className="p-6 text-center font-mono">
           <p className="text-sm text-muted-foreground">Wallet not connected</p>
           <button
             onClick={login}
-            className="mt-4 bg-primary px-4 py-2 text-sm font-semibold uppercase text-black transition hover:opacity-90"
+            className="glow-primary glow-primary-hover mt-5 rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold uppercase text-primary-foreground hover:opacity-95"
           >
             Connect Wallet
           </button>
@@ -34,10 +34,10 @@ export function PortfolioCard() {
   const held = (portfolio?.assets ?? []).filter((a) => a.amount > 0);
 
   return (
-    <div className="border border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border bg-[#0b0d11] px-4 py-2">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex items-center justify-between surface-head border-b border-border px-5 py-3">
         <span className="font-mono text-[10px] uppercase tracking-widest text-primary">
-          ▍ Portfolio Value
+          ▍ Wallet Value
         </span>
         <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           claimable fees {fmtUSD(portfolio?.claimableFeesUSD)}
@@ -69,7 +69,7 @@ export function PortfolioCard() {
                 className="grid grid-cols-[1fr_auto_auto] items-center gap-4 py-2.5"
               >
                 <div className="flex items-center gap-2.5">
-                  <TokenIcon symbol={token.symbol} size={24} />
+                  <TokenIcon symbol={token.symbol} name={token.name} logo={token.logo} size={24} />
                   <div>
                     <div className="text-sm font-medium">{token.symbol}</div>
                     <div className="text-[10px] text-muted-foreground">{token.name}</div>

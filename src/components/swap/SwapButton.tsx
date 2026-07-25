@@ -11,10 +11,10 @@ export function SwapButton({ disabled = false, loading = false, label = "Swap", 
       type="button"
       disabled={disabled || loading}
       onClick={onClick}
-      className={`mt-4 w-full py-3.5 font-mono text-sm font-semibold uppercase tracking-wide transition ${
+      className={`mt-5 w-full rounded-lg py-4 font-mono text-sm font-semibold uppercase tracking-wide transition ${
         disabled || loading
           ? "cursor-not-allowed bg-muted text-muted-foreground"
-          : "bg-primary text-black hover:opacity-90"
+          : "glow-primary glow-primary-hover bg-primary text-primary-foreground hover:opacity-95"
       }`}
     >
       {loading ? "Processing…" : label}

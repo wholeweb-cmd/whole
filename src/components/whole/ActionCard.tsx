@@ -4,14 +4,15 @@ import { usePrivy } from "@privy-io/react-auth";
 import { ArrowRight, X } from "lucide-react";
 
 import type { Intent } from "@/lib/intent/types";
-import { useQuote } from "@/hooks/useQuote";
-import { useExecuteSwap } from "@/hooks/useExecuteSwap";
+import { useSwapExecute } from "@/hooks/useSwapExecute";
+import { useSwapQuote } from "@/hooks/useSwapQuote";
+import { useSwapTokens } from "@/hooks/useSwapTokens";
 import { useLiquidity } from "@/hooks/useLiquidity";
 import { useClaimFees } from "@/hooks/useClaimFees";
 import { useLiquidityPositions } from "@/hooks/useLiquidityPositions";
-import { getFeeTier, getTokenDecimals, getWrappedAddress } from "@/lib/tokens/helpers";
 import { getToken } from "@/lib/tokens/index";
 import { useSettingsStore } from "@/lib/store/settingsStore";
+import { SERVICE_FEE_PERCENT } from "@/lib/config/swapFee";
 
 interface Props {
   intent: Intent;
@@ -28,8 +29,8 @@ function Frame({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mb-2 border border-border bg-card font-mono shadow-lg">
-      <div className="flex items-center justify-between border-b border-border bg-[#0b0d11] px-3 py-1.5">
+    <div className="surface-panel mb-2 overflow-hidden rounded-xl border border-border font-mono">
+      <div className="surface-head flex items-center justify-between border-b border-border px-4 py-2.5">
         <span className="text-[10px] font-semibold uppercase tracking-widest text-primary">
           ▍ {title}
         </span>
@@ -60,10 +61,10 @@ function ConfirmButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={`mt-3 flex w-full items-center justify-center gap-2 py-2.5 text-sm font-semibold uppercase tracking-wide transition ${
+      className={`mt-4 flex w-full items-center justify-center gap-2 rounded-lg py-3 text-sm font-semibold uppercase tracking-wide transition ${
         disabled
           ? "cursor-not-allowed bg-muted text-muted-foreground"
-          : "bg-primary text-black hover:opacity-90"
+          : "glow-primary glow-primary-hover bg-primary text-primary-foreground hover:opacity-95"
       }`}
     >
       {label}
@@ -80,23 +81,34 @@ function SwapAction({
   onDismiss(): void;
 }) {
   const { authenticated, login } = usePrivy();
-  const { execute, step, error } = useExecuteSwap();
+  const { execute, step, error } = useSwapExecute();
+  const { tokens } = useSwapTokens();
   const defaultSlippage = useSettingsStore((s) => s.defaultSlippage);
 
-  const tokenIn = getWrappedAddress(intent.fromToken);
-  const tokenOut = getWrappedAddress(intent.toToken);
-  const decimalsIn = getTokenDecimals(intent.fromToken);
-  const decimalsOut = getTokenDecimals(intent.toToken);
-  const fee = getFeeTier(intent.fromToken);
+  const fromSymbol = intent.fromToken.toUpperCase();
+  const toSymbol = intent.toToken.toUpperCase();
+  const fromToken =
+    tokens.find((token) =>
+      fromSymbol === "ETH"
+        ? token.isNative
+        : !token.isNative && token.symbol.toUpperCase() === fromSymbol,
+    ) ?? null;
+  const toToken =
+    tokens.find((token) =>
+      toSymbol === "ETH"
+        ? token.isNative
+        : !token.isNative && token.symbol.toUpperCase() === toSymbol,
+    ) ?? null;
+  const nativePrice = tokens.find((token) => token.isNative)?.price ?? null;
 
-  const { quote, loading: quoting } = useQuote({
-    tokenIn,
-    tokenOut,
-    amount: intent.amount,
-    decimalsIn,
-    decimalsOut,
-    fee,
-  });
+  const {
+    out: quote,
+    grossOut,
+    serviceFee,
+    route,
+    loading: quoting,
+    noRoute,
+  } = useSwapQuote(fromToken, toToken, intent.amount, nativePrice);
 
   const loading = step === "approving" || step === "swapping";
 
@@ -106,17 +118,22 @@ function SwapAction({
       return;
     }
 
+    if (!fromToken || !toToken || !route) return;
+
     await execute({
-      fromToken: intent.fromToken,
-      toToken: intent.toToken,
+      tokenIn: fromToken,
+      tokenOut: toToken,
       amountIn: intent.amount,
-      amountOut: quote,
+      grossAmountOut: grossOut,
       slippage: defaultSlippage,
+      route,
     });
   }
 
   let label = "Confirm Swap";
   if (!authenticated) label = "Connect Wallet";
+  else if (quoting) label = "Finding best route...";
+  else if (noRoute || !route) label = "No route found";
   else if (loading) label = step === "approving" ? "Approving..." : "Swapping...";
   else if (step === "success") label = "Swapped ✓";
 
@@ -132,10 +149,18 @@ function SwapAction({
       <p className="mt-1 font-mono text-xs text-muted-foreground">
         Estimated: {quoting ? "..." : quote} {intent.toToken}
       </p>
+      <p className="mt-1 font-mono text-xs text-muted-foreground">
+        Service fee ({SERVICE_FEE_PERCENT.toFixed(2)}%): {quoting ? "..." : serviceFee}{" "}
+        {intent.toToken}
+      </p>
       {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
       <ConfirmButton
         label={label}
-        disabled={loading || step === "success"}
+        disabled={
+          loading ||
+          step === "success" ||
+          (authenticated && (quoting || noRoute || !fromToken || !toToken || !route))
+        }
         onClick={handleConfirm}
       />
     </Frame>
@@ -199,13 +224,13 @@ function AddLiquidityAction({
           value={amountA}
           onChange={(e) => setAmountA(e.target.value)}
           placeholder={`Amount ${intent.tokenA}`}
-          className="w-1/2 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none"
+          className="surface-tile w-1/2 rounded-lg border border-border bg-background/40 px-4 py-2.5 text-sm outline-none transition focus:border-primary/60"
         />
         <input
           value={amountB}
           onChange={(e) => setAmountB(e.target.value)}
           placeholder={`Amount ${intent.tokenB}`}
-          className="w-1/2 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none"
+          className="surface-tile w-1/2 rounded-lg border border-border bg-background/40 px-4 py-2.5 text-sm outline-none transition focus:border-primary/60"
         />
       </div>
 
@@ -359,7 +384,7 @@ function AnswerAction({
   onDismiss(): void;
 }) {
   return (
-    <Frame title="Fellow" onDismiss={onDismiss}>
+    <Frame title="WHOLE" onDismiss={onDismiss}>
       <p className="text-sm text-foreground">{intent.reply}</p>
     </Frame>
   );

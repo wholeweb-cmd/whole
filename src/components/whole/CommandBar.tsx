@@ -39,7 +39,7 @@ export function CommandBar() {
       setIntent({
         kind: "unknown",
         raw: message,
-        reason: "Something went wrong reaching Fellow. Please try again.",
+        reason: "Something went wrong reaching WHOLE. Please try again.",
       });
     } finally {
       setLoading(false);
@@ -47,8 +47,8 @@ export function CommandBar() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background">
-      <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-3">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-5xl flex-col gap-2.5 px-5 py-4">
         {intent && <ActionCard intent={intent} onDismiss={() => setIntent(null)} />}
 
         {focused && (
@@ -60,7 +60,7 @@ export function CommandBar() {
                   e.preventDefault();
                   setValue(s);
                 }}
-                className="flex items-center gap-2 rounded-sm border border-border bg-card px-2.5 py-1.5 text-[11px] text-muted-foreground hover:border-primary hover:text-foreground"
+                className="surface-tile glow-primary-hover flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-[11px] text-muted-foreground hover:border-primary/60 hover:text-foreground"
               >
                 <ArrowRight className="h-3 w-3 text-primary" />
                 {s}
@@ -68,7 +68,7 @@ export function CommandBar() {
             ))}
           </div>
         )}
-        <div className="flex items-center gap-3 border border-border bg-card px-4 py-3">
+        <div className="surface-panel flex items-center gap-3 rounded-xl border border-border px-5 py-3.5 transition-colors focus-within:border-primary/50">
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
           ) : (
@@ -82,18 +82,18 @@ export function CommandBar() {
             onKeyDown={(e) => {
               if (e.key === "Enter") run();
             }}
-            placeholder="Ask Fellow..."
+            placeholder="Ask WHOLE..."
             disabled={loading}
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-60"
           />
-          <kbd className="hidden rounded-sm border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline">
+          <kbd className="hidden rounded-md border border-border px-2 py-1 font-mono text-[10px] text-muted-foreground sm:inline">
             ⌘K
           </kbd>
           <button
             type="button"
             disabled={!value || loading}
             onClick={run}
-            className="flex items-center gap-1.5 rounded-sm bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground disabled:opacity-40"
+            className="glow-primary-hover flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-[11px] font-semibold text-primary-foreground disabled:opacity-40 disabled:shadow-none"
           >
             Run <CornerDownLeft className="h-3 w-3" />
           </button>

@@ -70,7 +70,8 @@ export function AddLiquidityCard() {
 
   // Live pool economics from market data.
   const market = useMemo(
-    () => markets?.find((m) => selected && m.address.toLowerCase() === selected.address.toLowerCase()),
+    () =>
+      markets?.find((m) => selected && m.address.toLowerCase() === selected.address.toLowerCase()),
     [markets, selected],
   );
   const tvl = market?.tvl ?? null;
@@ -125,8 +126,8 @@ export function AddLiquidityCard() {
   else if (resolving) label = "Finding pool…";
   else if (fee == null) label = "No pool for this token";
   else if (!amountA || !amountB) label = "Enter deposit amounts";
-  else if (Number(amountA) > balanceA) label = `Insufficient ${selected.symbol}`;
-  else if (Number(amountB) > balanceB) label = `Insufficient ${quote?.symbol}`;
+  else if (Number(amountA) > balanceA.value) label = `Insufficient ${selected.symbol}`;
+  else if (Number(amountB) > balanceB.value) label = `Insufficient ${quote?.symbol}`;
   else if (step === "approving") label = "Approving…";
   else if (step === "submitting") label = "Depositing…";
   else if (step === "success") label = "Deposited ✓";
@@ -140,14 +141,14 @@ export function AddLiquidityCard() {
     fee == null ||
     !amountA ||
     !amountB ||
-    Number(amountA) > balanceA ||
-    Number(amountB) > balanceB ||
+    Number(amountA) > balanceA.value ||
+    Number(amountB) > balanceB.value ||
     loading ||
     step === "success";
 
   return (
-    <div className="w-full border border-border bg-card font-mono">
-      <div className="flex items-center justify-between border-b border-border bg-[#0b0d11] px-4 py-2">
+    <div className="surface-panel w-full overflow-hidden rounded-xl border border-border font-mono">
+      <div className="surface-head flex items-center justify-between border-b border-border px-5 py-3">
         <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-primary">
           <Droplets className="h-3 w-3" /> Provide Liquidity
         </span>
@@ -161,20 +162,30 @@ export function AddLiquidityCard() {
         <button
           type="button"
           onClick={() => setPickerOpen((o) => !o)}
-          className="flex w-full items-center justify-between border border-border bg-background px-3 py-3 transition hover:border-primary"
+          className="surface-tile flex w-full items-center justify-between rounded-lg border border-border bg-background/40 px-4 py-3.5 transition hover:border-primary/60"
         >
           <span className="flex items-center gap-2">
             <span className="flex items-center">
-              <TokenIcon symbol={selected?.symbol ?? "?"} logo={selected?.logo} size={26} />
+              <TokenIcon
+                symbol={selected?.symbol ?? "?"}
+                name={selected?.name}
+                logo={selected?.logo}
+                size={26}
+              />
               <span className="-ml-2">
-                <TokenIcon symbol={quote?.symbol ?? "?"} logo={quote?.logo} size={26} />
+                <TokenIcon
+                  symbol={quote?.symbol ?? "?"}
+                  name={quote?.name}
+                  logo={quote?.logo}
+                  size={26}
+                />
               </span>
             </span>
             <span className="text-sm font-semibold">
               {selected?.symbol ?? "Select"} / {quote?.symbol ?? "—"}
             </span>
             {fee != null && (
-              <span className="border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
+              <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] text-primary">
                 {FEE_LABELS[fee] ?? `${fee}`}
               </span>
             )}
@@ -197,7 +208,7 @@ export function AddLiquidityCard() {
         )}
 
         {/* Pool stats */}
-        <div className="mt-3 grid grid-cols-3 gap-px overflow-hidden border border-border bg-border text-center">
+        <div className="mt-4 grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-border bg-border text-center">
           <div className="bg-background px-2 py-2.5">
             <div className="text-[9px] uppercase tracking-widest text-muted-foreground">Price</div>
             <div className="mt-0.5 text-xs tabular-nums">
@@ -205,11 +216,15 @@ export function AddLiquidityCard() {
             </div>
           </div>
           <div className="bg-background px-2 py-2.5">
-            <div className="text-[9px] uppercase tracking-widest text-muted-foreground">Pool TVL</div>
+            <div className="text-[9px] uppercase tracking-widest text-muted-foreground">
+              Pool TVL
+            </div>
             <div className="mt-0.5 text-xs tabular-nums">{usd(tvl)}</div>
           </div>
           <div className="bg-background px-2 py-2.5">
-            <div className="text-[9px] uppercase tracking-widest text-muted-foreground">Est. APR</div>
+            <div className="text-[9px] uppercase tracking-widest text-muted-foreground">
+              Est. APR
+            </div>
             <div className="mt-0.5 text-xs tabular-nums text-primary">
               {aprPct != null ? `${aprPct.toFixed(1)}%` : "—"}
             </div>
@@ -221,15 +236,15 @@ export function AddLiquidityCard() {
           2 · Deposit both tokens
         </label>
         <div className="space-y-2">
-          <div className="border border-border bg-background p-3">
+          <div className="surface-tile rounded-lg border border-border bg-background/40 p-4">
             <div className="mb-1 flex items-center justify-between text-[10px] text-muted-foreground">
               <span>{selected?.symbol ?? "Token"}</span>
               <button
                 type="button"
-                onClick={() => balanceA > 0 && onAmountA(String(balanceA))}
+                onClick={() => balanceA.raw > 0n && onAmountA(balanceA.exact)}
                 className="uppercase tracking-widest hover:text-primary"
               >
-                bal {balanceA.toFixed(4)}
+                bal {balanceA.isLoading ? "…" : balanceA.value.toFixed(4)}
               </button>
             </div>
             <input
@@ -240,10 +255,12 @@ export function AddLiquidityCard() {
               className="w-full bg-transparent text-xl font-semibold tabular-nums outline-none"
             />
           </div>
-          <div className="border border-border bg-background p-3">
+          <div className="surface-tile rounded-lg border border-border bg-background/40 p-4">
             <div className="mb-1 flex items-center justify-between text-[10px] text-muted-foreground">
               <span>{quote?.symbol ?? "Quote"}</span>
-              <span className="uppercase tracking-widest">bal {balanceB.toFixed(4)}</span>
+              <span className="uppercase tracking-widest">
+                bal {balanceB.isLoading ? "…" : balanceB.value.toFixed(4)}
+              </span>
             </div>
             <input
               value={amountB}
@@ -259,7 +276,7 @@ export function AddLiquidityCard() {
         </div>
 
         {/* What you get */}
-        <div className="mt-3 space-y-1.5 border border-border bg-background p-3 text-[11px]">
+        <div className="surface-tile mt-4 space-y-2 rounded-lg border border-border bg-background/40 p-4 text-[11px]">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Deposit value</span>
             <span className="tabular-nums">{depositUSD > 0 ? usd(depositUSD) : "—"}</span>
@@ -267,7 +284,9 @@ export function AddLiquidityCard() {
           <div className="flex justify-between">
             <span className="text-muted-foreground">Your share of pool</span>
             <span className="tabular-nums text-primary">
-              {poolSharePct != null ? `${poolSharePct < 0.01 ? "<0.01" : poolSharePct.toFixed(2)}%` : "—"}
+              {poolSharePct != null
+                ? `${poolSharePct < 0.01 ? "<0.01" : poolSharePct.toFixed(2)}%`
+                : "—"}
             </span>
           </div>
           <div className="flex justify-between">
@@ -290,10 +309,10 @@ export function AddLiquidityCard() {
           type="button"
           disabled={disabled}
           onClick={handleSubmit}
-          className={`mt-4 w-full py-3 text-sm font-semibold uppercase tracking-wide transition ${
+          className={`mt-5 w-full rounded-lg py-4 text-sm font-semibold uppercase tracking-wide transition ${
             disabled
               ? "cursor-not-allowed bg-muted text-muted-foreground"
-              : "bg-primary text-black hover:opacity-90"
+              : "glow-primary glow-primary-hover bg-primary text-primary-foreground hover:opacity-95"
           }`}
         >
           {label}

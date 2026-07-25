@@ -32,7 +32,7 @@ export interface ClaimFeesIntent {
 
 export interface NavigateIntent {
   kind: "navigate";
-  to: "/swap" | "/liquidity" | "/portfolio" | "/markets" | "/";
+  to: "/swap" | "/liquidity" | "/wallet" | "/markets" | "/";
   label: string;
   raw: string;
 }

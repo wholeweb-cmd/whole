@@ -3,12 +3,10 @@ import { getToken } from "@/lib/tokens/index";
 // ---------------------------------------------------------------------------
 // Swap routing.
 //
-// Almost every token on Robinhood Chain pools against USDG (a handful pool
-// against WETH, which itself pools against USDG). So USDG is used as the
-// universal routing hub: any token reaches any other token by hopping through
-// USDG. A route is a list of pool "nodes" (token addresses) plus the fee tier
-// of each hop between them - a single-hop route when both tokens share USDG
-// as their direct quote, otherwise a two- or three-hop path.
+// A route is a list of pool "nodes" (token addresses) plus the fee tier of
+// each hop between them. Route discovery considers the direct pool first and
+// then the two deep-liquidity hubs on Robinhood Chain (WETH and USDG). The
+// quoter decides which viable path produces the best net result.
 // ---------------------------------------------------------------------------
 
 export interface SwapToken {
@@ -34,14 +32,46 @@ export interface Route {
   fees: number[];
 }
 
-const USDG_ADDRESS = (getToken("USDG")?.address ?? "").toLowerCase() as `0x${string}`;
-const WETH_ADDRESS = (getToken("ETH")?.wrapped ?? "").toLowerCase() as `0x${string}`;
+export const USDG_ADDRESS = (getToken("USDG")?.address ?? "").toLowerCase() as `0x${string}`;
+export const WETH_ADDRESS = (getToken("ETH")?.wrapped ?? "").toLowerCase() as `0x${string}`;
+export const V3_FEE_TIERS = [100, 500, 3000, 10000] as const;
 
 export function isUSDG(address: string) {
   return address.toLowerCase() === USDG_ADDRESS;
 }
 export function isWETH(address: string) {
   return address.toLowerCase() === WETH_ADDRESS;
+}
+
+/**
+ * Every simple path worth testing between a pair on this deployment:
+ * direct, through either hub, or through both hubs. Repeated nodes are
+ * discarded so ETH/WETH and USDG selections do not create zero-length hops.
+ */
+export function candidateNodePaths(
+  tokenIn: `0x${string}`,
+  tokenOut: `0x${string}`,
+): `0x${string}`[][] {
+  const from = tokenIn.toLowerCase() as `0x${string}`;
+  const to = tokenOut.toLowerCase() as `0x${string}`;
+  if (from === to) return [];
+
+  const candidates: `0x${string}`[][] = [
+    [from, to],
+    [from, WETH_ADDRESS, to],
+    [from, USDG_ADDRESS, to],
+    [from, WETH_ADDRESS, USDG_ADDRESS, to],
+    [from, USDG_ADDRESS, WETH_ADDRESS, to],
+  ];
+
+  const seen = new Set<string>();
+  return candidates.filter((path) => {
+    if (new Set(path).size !== path.length) return false;
+    const key = path.join(">");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 /** Hops carrying `token` down to the USDG hub, or null if it can't be routed there. */

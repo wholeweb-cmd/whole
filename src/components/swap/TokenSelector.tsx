@@ -22,18 +22,22 @@ function TokenRow({ token, onSelect }: { token: SwapToken; onSelect(t: SwapToken
   return (
     <button
       onClick={() => onSelect(token)}
-      className="flex w-full items-center justify-between px-3 py-2.5 font-mono transition hover:bg-primary/5"
+      className="flex w-full items-center justify-between px-4 py-2.5 font-mono transition hover:bg-primary/5"
     >
       <div className="flex min-w-0 items-center gap-2.5">
-        <TokenIcon symbol={token.symbol} logo={token.logo} size={26} />
+        <TokenIcon symbol={token.symbol} name={token.name} logo={token.logo} size={26} />
         <div className="min-w-0 text-left">
           <div className="truncate text-sm font-medium">{token.symbol}</div>
           <div className="truncate text-[10px] text-muted-foreground">{token.name}</div>
         </div>
       </div>
       <div className="shrink-0 text-right">
-        <div className="text-xs tabular-nums">{balance > 0 ? balance.toFixed(4) : "—"}</div>
-        <div className="text-[10px] tabular-nums text-muted-foreground">{fmtPrice(token.price)}</div>
+        <div className="text-xs tabular-nums">
+          {balance.raw > 0n ? balance.value.toFixed(4) : "—"}
+        </div>
+        <div className="text-[10px] tabular-nums text-muted-foreground">
+          {fmtPrice(token.price)}
+        </div>
       </div>
     </button>
   );
@@ -56,8 +60,8 @@ export function TokenSelector({ tokens, onSelect }: Props) {
   }, [q, tokens]);
 
   return (
-    <div className="border border-border bg-card">
-      <div className="flex items-center gap-2 border-b border-border px-3 py-2 focus-within:border-primary/60">
+    <div className="surface-panel overflow-hidden rounded-lg border border-border">
+      <div className="surface-head flex items-center gap-2 border-b border-border px-4 py-2.5 focus-within:border-primary/60">
         <span className="font-mono text-primary">$</span>
         <Search className="h-3.5 w-3.5 text-muted-foreground" />
         <input
@@ -78,7 +82,11 @@ export function TokenSelector({ tokens, onSelect }: Props) {
           </p>
         ) : (
           filtered.map((token) => (
-            <TokenRow key={token.isNative ? "eth" : token.address} token={token} onSelect={onSelect} />
+            <TokenRow
+              key={token.isNative ? "eth" : token.address}
+              token={token}
+              onSelect={onSelect}
+            />
           ))
         )}
       </div>

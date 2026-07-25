@@ -113,15 +113,13 @@ async function resolveId(symbol: string, priceHint?: number): Promise<string | n
       }
       id =
         best ??
-        [...candidates].sort(
-          (a, b) => (a.market_cap_rank ?? 1e9) - (b.market_cap_rank ?? 1e9),
-        )[0]?.id ??
+        [...candidates].sort((a, b) => (a.market_cap_rank ?? 1e9) - (b.market_cap_rank ?? 1e9))[0]
+          ?.id ??
         null;
     } else {
       id =
-        [...candidates].sort(
-          (a, b) => (a.market_cap_rank ?? 1e9) - (b.market_cap_rank ?? 1e9),
-        )[0]?.id ?? null;
+        [...candidates].sort((a, b) => (a.market_cap_rank ?? 1e9) - (b.market_cap_rank ?? 1e9))[0]
+          ?.id ?? null;
     }
   }
 

@@ -5,8 +5,9 @@ import { useSwapTokens } from "@/hooks/useSwapTokens";
 import { useSwapQuote } from "@/hooks/useSwapQuote";
 import { useSwapExecute } from "@/hooks/useSwapExecute";
 import { useSwapBalance } from "@/hooks/useSwapBalance";
-import { useResolvedToken } from "@/hooks/useResolvedToken";
 import { useSettingsStore } from "@/lib/store/settingsStore";
+import { useSwapPreviewStore } from "@/lib/store/swapPreviewStore";
+import { SERVICE_FEE_PERCENT } from "@/lib/config/swapFee";
 import { getToken } from "@/lib/tokens/index";
 import { routeLabel, type SwapToken } from "@/lib/uniswap/route";
 
@@ -16,7 +17,7 @@ import { SwapSettings } from "./SwapSettings";
 
 // A stable key for a token: "eth" for native, else the contract address. The
 // live token object is always re-derived from the current list by this key, so
-// prices/fees that arrive after selection flow through instead of going stale.
+// prices/fees that arrive after selection update the form instead of going stale.
 function keyOf(token: SwapToken) {
   return token.isNative ? "eth" : token.address.toLowerCase();
 }
@@ -28,7 +29,7 @@ function findByKey(tokens: SwapToken[], key: string | null): SwapToken | null {
 
 export function SwapCard() {
   const { authenticated, login } = usePrivy();
-  const { tokens, wethFee } = useSwapTokens();
+  const { tokens } = useSwapTokens();
 
   const [fromKey, setFromKey] = useState<string | null>(null);
   const [toKey, setToKey] = useState<string | null>(null);
@@ -48,21 +49,23 @@ export function SwapCard() {
   const fromSelection = findByKey(tokens, fromKey);
   const toSelection = findByKey(tokens, toKey);
 
-  // Most tokens arrive without a discovered pool fee - resolve it on demand so
-  // any token pair becomes routable/swappable.
-  const fromToken = useResolvedToken(fromSelection);
-  const toToken = useResolvedToken(toSelection);
+  const fromToken = fromSelection;
+  const toToken = toSelection;
+  const nativePrice = tokens.find((token) => token.isNative)?.price ?? null;
 
-  const resolving =
-    (fromSelection != null && fromToken?.feeTier == null && fromSelection.symbol !== "USDG") ||
-    (toSelection != null && toToken?.feeTier == null && toSelection.symbol !== "USDG");
-
-  const { out, loading: quoting, route, noRoute, source } = useSwapQuote(
-    fromToken,
-    toToken,
-    fromAmount,
-    wethFee,
-  );
+  const {
+    out,
+    grossOut,
+    serviceFee,
+    loading: quoting,
+    route,
+    noRoute,
+    source,
+    estimate,
+    networkFeeEth,
+    networkFeeUsd,
+    alternatives,
+  } = useSwapQuote(fromToken, toToken, fromAmount, nativePrice);
 
   const { execute, step, error, reset } = useSwapExecute();
   const balance = useSwapBalance(fromToken);
@@ -84,7 +87,69 @@ export function SwapCard() {
     return (addr: string) => map.get(addr.toLowerCase()) ?? `${addr.slice(0, 6)}…`;
   }, [tokens]);
 
-  const insufficient = Number(fromAmount || 0) > balance;
+  // Publish the live route for the Route Preview card beside this form. Native
+  // ETH routes as WETH under the hood, so the wrap/unwrap legs are spelled out
+  // here rather than left implicit in the pool path.
+  const { path, hopLabels } = useMemo(() => {
+    if (!route || !fromToken || !toToken)
+      return { path: [] as string[], hopLabels: [] as string[] };
+
+    const nodes = route.nodes.map(symbolFor);
+    const labels = route.fees.map((fee) => `${(fee / 10_000).toFixed(2)}% pool`);
+
+    if (fromToken.isNative) {
+      nodes.unshift("ETH");
+      labels.unshift("wrap");
+    }
+    if (toToken.isNative) {
+      nodes.push("ETH");
+      labels.push("unwrap");
+    }
+
+    return { path: nodes, hopLabels: labels };
+  }, [route, fromToken, toToken, symbolFor]);
+
+  const publishPreview = useSwapPreviewStore((s) => s.publish);
+  const clearPreview = useSwapPreviewStore((s) => s.clear);
+
+  const pathKey = path.join(">");
+  const hopKey = hopLabels.join("|");
+
+  useEffect(() => {
+    publishPreview({
+      path,
+      hopLabels,
+      fromSymbol: fromToken?.symbol ?? null,
+      toSymbol: toToken?.symbol ?? null,
+      amountIn: fromAmount,
+      amountOut: out,
+      grossAmountOut: grossOut,
+      serviceFee,
+      midOut: estimate,
+      quoteSource: source,
+      slippage,
+      status: !fromToken || !toToken ? "idle" : noRoute ? "noRoute" : quoting ? "quoting" : "ready",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    pathKey,
+    hopKey,
+    fromToken?.symbol,
+    toToken?.symbol,
+    fromAmount,
+    out,
+    grossOut,
+    serviceFee,
+    estimate,
+    source,
+    slippage,
+    noRoute,
+    quoting,
+  ]);
+
+  useEffect(() => () => clearPreview(), [clearPreview]);
+
+  const insufficient = Number(fromAmount || 0) > balance.value;
   const empty = Number(fromAmount || 0) <= 0;
   const loading = step === "approving" || step === "swapping";
 
@@ -97,7 +162,7 @@ export function SwapCard() {
       tokenIn: fromToken,
       tokenOut: toToken,
       amountIn: fromAmount,
-      amountOut: out,
+      grossAmountOut: grossOut,
       slippage,
       route,
     });
@@ -106,7 +171,7 @@ export function SwapCard() {
   let label = "Swap";
   if (!authenticated) label = "Connect Wallet";
   else if (!fromToken || !toToken) label = "Select tokens";
-  else if (resolving) label = "Finding route…";
+  else if (quoting) label = "Finding best route…";
   else if (noRoute) label = "No route found";
   else if (empty) label = "Enter amount";
   else if (insufficient) label = "Insufficient balance";
@@ -119,7 +184,8 @@ export function SwapCard() {
     !authenticated ||
     !fromToken ||
     !toToken ||
-    resolving ||
+    quoting ||
+    !route ||
     noRoute ||
     empty ||
     insufficient ||
@@ -131,9 +197,9 @@ export function SwapCard() {
       : null;
 
   return (
-    <div className="mx-auto w-full max-w-lg border border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border bg-[#0b0d11] px-4 py-2">
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-primary">
+    <div className="surface-panel mx-auto w-full max-w-lg overflow-hidden rounded-xl border border-border">
+      <div className="surface-head flex items-center justify-between border-b border-border px-5 py-3">
+        <span className="font-mono text-[11px] font-semibold uppercase tracking-widest text-primary">
           ▍ Swap
         </span>
         <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -141,7 +207,7 @@ export function SwapCard() {
         </span>
       </div>
 
-      <div className="p-5">
+      <div className="p-6">
         <TokenInput
           label="From"
           token={fromToken}
@@ -153,11 +219,12 @@ export function SwapCard() {
           showMax
         />
 
-        <div className="my-2 flex justify-center">
+        <div className="my-3 flex justify-center">
           <button
             type="button"
             onClick={reverse}
-            className="border border-border bg-background p-2 text-primary transition hover:border-primary"
+            aria-label="Reverse swap direction"
+            className="glow-primary-hover grid h-10 w-10 place-items-center rounded-full border border-border bg-surface-raised text-primary hover:border-primary/60 hover:bg-primary/10"
           >
             ↕
           </button>
@@ -174,18 +241,48 @@ export function SwapCard() {
           readonly
         />
 
-        <div className="mt-3 space-y-2 border border-border bg-background p-4 font-mono text-xs [&_span:last-child]:tabular-nums">
+        <div className="surface-tile mt-4 space-y-2.5 rounded-lg border border-border bg-background/40 p-5 font-mono text-xs [&_span:last-child]:tabular-nums">
           <div className="flex justify-between">
             <span className="text-muted-foreground">
               Rate {source === "price" ? "(est.)" : source === "onchain" ? "(live)" : ""}
             </span>
             <span>
-              {rate && fromToken && toToken ? `1 ${fromToken.symbol} = ${rate} ${toToken.symbol}` : "—"}
+              {rate && fromToken && toToken
+                ? `1 ${fromToken.symbol} = ${rate} ${toToken.symbol}`
+                : "—"}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Route</span>
-            <span className="text-primary">{route ? routeLabel(route, symbolFor) : "—"}</span>
+            <span className="text-right text-primary">
+              {route ? routeLabel(route, symbolFor) : "—"}
+            </span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Network fee (est.)</span>
+            <span className="text-right">
+              {networkFeeEth == null
+                ? "—"
+                : `~${networkFeeEth.toFixed(6)} ETH${
+                    networkFeeUsd == null ? "" : ` / $${networkFeeUsd.toFixed(4)}`
+                  }`}
+            </span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">
+              Service fee ({SERVICE_FEE_PERCENT.toFixed(2)}%)
+            </span>
+            <span className="text-right">
+              {Number(serviceFee) > 0 && toToken
+                ? `${Number(serviceFee).toLocaleString(undefined, {
+                    maximumSignificantDigits: 6,
+                  })} ${toToken.symbol}`
+                : "—"}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Route search</span>
+            <span>{alternatives > 0 ? `Best of ${alternatives}` : "—"}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Min received ({slippage}%)</span>

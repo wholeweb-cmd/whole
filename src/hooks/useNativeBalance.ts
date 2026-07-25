@@ -1,31 +1,27 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { formatEther } from "viem";
 
 import { publicClient } from "@/lib/web3/client";
+import { BALANCE_QUERY_KEY, ZERO_BALANCE, type TokenBalance } from "./useERC20Balance";
 
-export function useNativeBalance(address?: `0x${string}`) {
-  const [balance, setBalance] = useState("0");
+const REFRESH_MS = 20_000;
 
-  useEffect(() => {
-    if (!address) {
-      setBalance("0");
-      return;
-    }
+/** Live native (ETH) balance for a wallet, in the same shape as ERC20 reads. */
+export function useNativeBalance(address?: `0x${string}`): TokenBalance {
+  const enabled = Boolean(address);
 
-    async function load(addr: `0x${string}`) {
-      try {
-        const value = await publicClient.getBalance({
-          address: addr,
-        });
+  const { data, isLoading } = useQuery({
+    queryKey: [BALANCE_QUERY_KEY, "native", address?.toLowerCase()],
+    enabled,
+    refetchInterval: REFRESH_MS,
+    refetchIntervalInBackground: true,
+    staleTime: 10_000,
+    queryFn: () => publicClient.getBalance({ address: address as `0x${string}` }),
+  });
 
-        setBalance(Number(formatEther(value)).toFixed(4));
-      } catch (err) {
-        console.error(err);
-      }
-    }
+  if (data == null) return { ...ZERO_BALANCE, isLoading: enabled && isLoading };
 
-    load(address);
-  }, [address]);
+  const exact = formatEther(data);
 
-  return balance;
+  return { raw: data, decimals: 18, exact, value: Number(exact), isLoading: false };
 }

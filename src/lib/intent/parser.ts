@@ -97,7 +97,7 @@ function parseRemoveLiquidity(text: string): Intent | null {
 
 function parseNavigate(text: string): Intent | null {
   const match = text.match(
-    /(?:go to|open|show|navigate to)\s+(swap|liquidity|portfolio|markets|dashboard|home)/i,
+    /(?:go to|open|show|navigate to)\s+(swap|liquidity|portfolio|wallet|markets|dashboard|home)/i,
   );
   if (!match) return null;
 
@@ -105,11 +105,12 @@ function parseNavigate(text: string): Intent | null {
 
   const routes: Record<
     string,
-    { to: "/swap" | "/liquidity" | "/portfolio" | "/markets" | "/"; label: string }
+    { to: "/swap" | "/liquidity" | "/wallet" | "/markets" | "/"; label: string }
   > = {
     swap: { to: "/swap", label: "Swap" },
     liquidity: { to: "/liquidity", label: "Liquidity" },
-    portfolio: { to: "/portfolio", label: "Portfolio" },
+    portfolio: { to: "/wallet", label: "Wallet" },
+    wallet: { to: "/wallet", label: "Wallet" },
     markets: { to: "/markets", label: "Markets" },
     dashboard: { to: "/", label: "Dashboard" },
     home: { to: "/", label: "Dashboard" },
@@ -136,7 +137,7 @@ export function parseIntent(input: string): Intent {
       kind: "unknown",
       raw: text,
       reason:
-        'Try something like "Swap 100 USDG to ETH", "Add liquidity 10 ETH and 100 USDG", or "Open portfolio".',
+        'Try something like "Swap 100 USDG to ETH", "Add liquidity 10 ETH and 100 USDG", or "Open wallet".',
     }
   );
 }

@@ -51,13 +51,19 @@ export function PriceChart({ symbol }: Props) {
   useEffect(() => {
     if (hasHistory || market?.price == null) return;
     setLive((prev) =>
-      [...prev, { t: Date.now(), price: market.price!, label: fmtLabel(Date.now(), range) }].slice(-60),
+      [...prev, { t: Date.now(), price: market.price!, label: fmtLabel(Date.now(), range) }].slice(
+        -60,
+      ),
     );
   }, [market?.price, hasHistory, range]);
 
   const data = useMemo<Point[]>(() => {
     if (hasHistory) {
-      const pts = chart!.points.map((p) => ({ t: p.t, price: p.price, label: fmtLabel(p.t, range) }));
+      const pts = chart!.points.map((p) => ({
+        t: p.t,
+        price: p.price,
+        label: fmtLabel(p.t, range),
+      }));
       // Keep the tip in sync with the live spot price.
       if (market?.price != null) {
         pts.push({ t: Date.now(), price: market.price, label: fmtLabel(Date.now(), range) });
