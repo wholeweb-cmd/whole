@@ -119,47 +119,47 @@ export function ContextPanel() {
         </div>
       </Card>
 
-      <Card title="Latest Notification">
-        {latest ? (
-          <div className="flex gap-3">
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-border bg-surface-raised">
-              <Bell className="h-3.5 w-3.5 text-primary" />
+      <div className="flex flex-col gap-3">
+        <Card title="Latest Notification">
+          {latest ? (
+            <div className="flex gap-3">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-border bg-surface-raised">
+                <Bell className="h-3.5 w-3.5 text-primary" />
+              </div>
+              <div className="flex min-w-0 flex-col">
+                <span className="text-xs font-medium text-foreground">
+                  {latest.type}{" "}
+                  {latest.status === "success"
+                    ? "completed"
+                    : latest.status === "error"
+                      ? "failed"
+                      : "pending"}
+                </span>
+                <span className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                  {latest.detail}
+                </span>
+                <span className="mt-2 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+                  {timeAgo(latest.timestamp)} ago
+                </span>
+              </div>
             </div>
-            <div className="flex min-w-0 flex-col">
-              <span className="text-xs font-medium text-foreground">
-                {latest.type}{" "}
-                {latest.status === "success"
-                  ? "completed"
-                  : latest.status === "error"
-                    ? "failed"
-                    : "pending"}
-              </span>
-              <span className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-                {latest.detail}
-              </span>
-              <span className="mt-2 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                {timeAgo(latest.timestamp)} ago
-              </span>
-            </div>
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">No notifications yet.</p>
-        )}
+          ) : (
+            <p className="text-xs text-muted-foreground">No notifications yet.</p>
+          )}
+        </Card>
         <a
           href="https://x.com/wholedex"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Open WHOLE on X"
           title="WHOLE on X"
-          className={`mt-4 inline-grid h-9 w-9 place-items-center rounded-lg border border-foreground/15 bg-foreground text-background shadow-sm transition-colors hover:border-primary hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 ${
-            latest ? "ml-11" : ""
-          }`}
+          className="ml-5 inline-grid h-9 w-9 place-items-center rounded-lg border border-foreground/15 bg-foreground text-background shadow-sm transition-colors hover:border-primary hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
         >
           <span aria-hidden="true" className="font-sans text-base font-bold leading-none">
             𝕏
           </span>
         </a>
-      </Card>
+      </div>
     </aside>
   );
 }
