@@ -140,6 +140,18 @@ export function ContextPanel() {
               <span className="mt-2 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
                 {timeAgo(latest.timestamp)} ago
               </span>
+              <a
+                href="https://x.com/wholedex"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open WHOLE on X"
+                title="WHOLE on X"
+                className="mt-3 inline-grid h-8 w-8 place-items-center rounded-lg border border-border bg-surface-raised text-foreground transition-colors hover:border-primary/60 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              >
+                <span aria-hidden="true" className="font-sans text-sm font-bold leading-none">
+                  𝕏
+                </span>
+              </a>
             </div>
           </div>
         ) : (
