@@ -140,23 +140,25 @@ export function ContextPanel() {
               <span className="mt-2 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
                 {timeAgo(latest.timestamp)} ago
               </span>
-              <a
-                href="https://x.com/wholedex"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Open WHOLE on X"
-                title="WHOLE on X"
-                className="mt-3 inline-grid h-8 w-8 place-items-center rounded-lg border border-border bg-surface-raised text-foreground transition-colors hover:border-primary/60 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
-              >
-                <span aria-hidden="true" className="font-sans text-sm font-bold leading-none">
-                  𝕏
-                </span>
-              </a>
             </div>
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">No notifications yet.</p>
         )}
+        <a
+          href="https://x.com/wholedex"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open WHOLE on X"
+          title="WHOLE on X"
+          className={`mt-4 inline-grid h-9 w-9 place-items-center rounded-lg border border-foreground/15 bg-foreground text-background shadow-sm transition-colors hover:border-primary hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 ${
+            latest ? "ml-11" : ""
+          }`}
+        >
+          <span aria-hidden="true" className="font-sans text-base font-bold leading-none">
+            𝕏
+          </span>
+        </a>
       </Card>
     </aside>
   );
