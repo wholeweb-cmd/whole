@@ -10,7 +10,7 @@ function fmtUSD(v: number | null | undefined) {
 
 export function PortfolioCard() {
   const { authenticated, login } = usePrivy();
-  const { data: portfolio, isLoading } = usePortfolioData();
+  const { data: portfolio, isLoading, isError } = usePortfolioData();
 
   if (!authenticated) {
     return (
@@ -32,7 +32,7 @@ export function PortfolioCard() {
   }
 
   const held = (portfolio?.assets ?? []).filter((a) => a.amount > 0);
-  const walletValue = fmtUSD(portfolio?.totalValue ?? 0);
+  const walletValue = isError && !portfolio ? "—" : fmtUSD(portfolio?.totalValue ?? 0);
 
   return (
     <div className="motion-card overflow-hidden rounded-xl border border-border bg-card">
@@ -56,6 +56,12 @@ export function PortfolioCard() {
           )}
         </div>
 
+        {isError && !portfolio && (
+          <p className="mt-4 text-xs text-muted-foreground">
+            Balance is temporarily unavailable. It will refresh automatically.
+          </p>
+        )}
+
         <div className="mt-5 border-t border-border pt-4">
           <div className="mb-2 grid grid-cols-[1fr_auto_auto] gap-4 text-[10px] uppercase tracking-widest text-muted-foreground">
             <span>Asset</span>
@@ -63,7 +69,7 @@ export function PortfolioCard() {
             <span className="text-right">Value</span>
           </div>
 
-          {held.length === 0 && (
+          {!isError && held.length === 0 && (
             <p className="py-3 text-xs text-muted-foreground">
               No token balances yet on this wallet.
             </p>

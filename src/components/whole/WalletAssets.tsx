@@ -8,13 +8,13 @@ import { Card } from "./Card";
 
 export function WalletAssets() {
   const { authenticated, login } = usePrivy();
-  const { data: portfolio, isLoading } = usePortfolioData();
+  const { data: portfolio, isLoading, isError } = usePortfolioData();
 
   const assets = [...(portfolio?.assets ?? [])]
     .filter((asset) => asset.amount > 0)
     .sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
     .slice(0, 4);
-  const spendableValue = formatUSD(portfolio?.totalValue ?? 0);
+  const spendableValue = isError && !portfolio ? "—" : formatUSD(portfolio?.totalValue ?? 0);
 
   return (
     <Card title="Wallet Assets">
@@ -61,7 +61,13 @@ export function WalletAssets() {
             </p>
           )}
 
-          {!isLoading && assets.length === 0 && (
+          {isError && !portfolio && (
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              Balance is temporarily unavailable. It will refresh automatically.
+            </p>
+          )}
+
+          {!isLoading && !isError && assets.length === 0 && (
             <p className="py-6 text-center text-xs text-muted-foreground">
               No supported token balances found on this wallet.
             </p>
