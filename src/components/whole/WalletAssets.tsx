@@ -1,5 +1,4 @@
 import { usePrivy } from "@privy-io/react-auth";
-import { Link } from "@tanstack/react-router";
 import { Wallet } from "lucide-react";
 
 import { TokenIcon } from "@/components/markets/TokenIcon";
@@ -17,19 +16,7 @@ export function WalletAssets() {
     .slice(0, 4);
 
   return (
-    <Card
-      title="Wallet Assets"
-      action={
-        authenticated ? (
-          <Link
-            to="/wallet"
-            className="font-mono text-[10px] uppercase tracking-widest text-primary hover:underline"
-          >
-            Open wallet
-          </Link>
-        ) : undefined
-      }
-    >
+    <Card title="Wallet Assets">
       {!authenticated ? (
         <div className="flex min-h-52 flex-col items-center justify-center text-center">
           <Wallet className="mb-3 h-6 w-6 text-primary" />

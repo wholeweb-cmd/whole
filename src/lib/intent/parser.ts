@@ -137,7 +137,7 @@ export function parseIntent(input: string): Intent {
       kind: "unknown",
       raw: text,
       reason:
-        'Try something like "Swap 100 USDG to ETH", "Add liquidity 10 ETH and 100 USDG", or "Open wallet".',
+        'Try something like "Swap 100 USDG to ETH", "Add liquidity 10 ETH and 100 USDG", or "Show markets".',
     }
   );
 }
