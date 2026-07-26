@@ -189,6 +189,100 @@
     background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0));
   }
 
+  .route-enter {
+    animation: route-enter 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .motion-card {
+    animation: card-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    transition:
+      transform 220ms ease,
+      border-color 220ms ease,
+      box-shadow 220ms ease;
+  }
+
+  .motion-card:nth-child(2) {
+    animation-delay: 55ms;
+  }
+
+  .motion-card:nth-child(3) {
+    animation-delay: 110ms;
+  }
+
+  .motion-card:nth-child(4) {
+    animation-delay: 165ms;
+  }
+
+  .motion-card:hover {
+    border-color: color-mix(in oklab, var(--primary) 22%, var(--border));
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
+      0 20px 46px -26px rgba(0, 0, 0, 0.95),
+      0 0 24px -20px color-mix(in oklab, var(--primary) 45%, transparent);
+    transform: translateY(-2px);
+  }
+
+  .motion-overlay {
+    animation: overlay-in 180ms ease-out both;
+  }
+
+  .motion-drawer {
+    animation: drawer-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .brand-orbit img {
+    animation: logo-breathe 4.8s ease-in-out infinite;
+    filter: drop-shadow(0 0 9px rgba(91, 102, 255, 0.18));
+    transition:
+      filter 220ms ease,
+      transform 220ms ease;
+  }
+
+  .brand-orbit:hover img {
+    filter:
+      drop-shadow(0 0 8px rgba(66, 133, 255, 0.55))
+      drop-shadow(0 0 13px rgba(165, 76, 255, 0.35));
+    transform: scale(1.04);
+  }
+
+  .token-selector-enter {
+    transform-origin: top center;
+    animation: selector-open 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .wallet-popover[data-state="open"] {
+    transform-origin: top right;
+    animation: popover-open 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .live-number {
+    display: inline-block;
+    animation: number-update 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .balance-skeleton {
+    background-image: linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0.05) 20%,
+      rgba(184, 255, 0, 0.18) 42%,
+      rgba(255, 255, 255, 0.05) 64%
+    );
+    background-size: 220% 100%;
+    animation: balance-shimmer 1.25s linear infinite;
+  }
+
+  .swap-reverse {
+    animation: swap-reverse 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .transaction-pulse {
+    animation: transaction-pulse 1.2s ease-in-out infinite;
+  }
+
+  .success-pop {
+    animation: success-pop 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
   /* Neon bloom for primary actions and the active nav item. */
   .glow-primary {
     box-shadow: 0 8px 28px -10px color-mix(in oklab, var(--primary) 65%, transparent);
@@ -205,5 +299,165 @@
   .glow-primary-hover:hover {
     box-shadow: 0 10px 30px -14px color-mix(in oklab, var(--primary) 55%, transparent);
     transform: translateY(-1px);
+  }
+}
+
+@keyframes route-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes logo-breathe {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 7px rgba(74, 121, 255, 0.16));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 10px rgba(73, 125, 255, 0.38))
+      drop-shadow(0 0 14px rgba(174, 79, 255, 0.18));
+  }
+}
+
+@keyframes selector-open {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scaleY(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+@keyframes popover-open {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes number-update {
+  from {
+    opacity: 0.35;
+    transform: translateY(4px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes balance-shimmer {
+  from {
+    background-position: 130% 0;
+  }
+  to {
+    background-position: -130% 0;
+  }
+}
+
+@keyframes swap-reverse {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  55% {
+    transform: rotate(180deg) scale(1.08);
+  }
+  100% {
+    transform: rotate(180deg) scale(1);
+  }
+}
+
+@keyframes transaction-pulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(184, 255, 0, 0.05);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 1px rgba(184, 255, 0, 0.22),
+      0 0 20px -10px rgba(184, 255, 0, 0.5);
+  }
+}
+
+@keyframes success-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.45) rotate(-18deg);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.18) rotate(4deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-enter,
+  .motion-card,
+  .motion-overlay,
+  .motion-drawer,
+  .brand-orbit img,
+  .token-selector-enter,
+  .wallet-popover[data-state="open"],
+  .live-number,
+  .balance-skeleton,
+  .swap-reverse,
+  .transaction-pulse,
+  .success-pop {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .motion-card:hover,
+  .brand-orbit:hover img {
+    transform: none;
   }
 }

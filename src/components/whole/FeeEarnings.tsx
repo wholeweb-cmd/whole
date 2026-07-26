@@ -44,6 +44,7 @@ export function FeeEarnings() {
     .filter((position) => Number(position.tokensOwed0) > 0 || Number(position.tokensOwed1) > 0)
     .sort((a, b) => (feeValue(b) ?? 0) - (feeValue(a) ?? 0));
   const total = positions.reduce((sum, position) => sum + (feeValue(position) ?? 0), 0);
+  const totalLabel = formatUSD(total);
 
   return (
     <Card
@@ -77,7 +78,13 @@ export function FeeEarnings() {
                 Ready to claim
               </p>
               <p className="mt-1 font-mono text-2xl font-semibold text-primary">
-                {loading && positions.length === 0 ? "…" : formatUSD(total)}
+                {loading && positions.length === 0 ? (
+                  <span className="balance-skeleton inline-block h-6 w-20 rounded-md" />
+                ) : (
+                  <span key={totalLabel} className="live-number">
+                    {totalLabel}
+                  </span>
+                )}
               </p>
             </div>
             <div className="surface-tile rounded-lg border border-border bg-background/40 p-4">

@@ -14,7 +14,7 @@ export function PortfolioCard() {
 
   if (!authenticated) {
     return (
-      <div className="surface-panel overflow-hidden rounded-xl border border-border">
+      <div className="motion-card surface-panel overflow-hidden rounded-xl border border-border">
         <div className="surface-head border-b border-border px-5 py-3 font-mono text-[10px] uppercase tracking-widest text-primary">
           ▍ Wallet
         </div>
@@ -32,9 +32,10 @@ export function PortfolioCard() {
   }
 
   const held = (portfolio?.assets ?? []).filter((a) => a.amount > 0);
+  const walletValue = fmtUSD(portfolio?.totalValue ?? 0);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
+    <div className="motion-card overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex items-center justify-between surface-head border-b border-border px-5 py-3">
         <span className="font-mono text-[10px] uppercase tracking-widest text-primary">
           ▍ Wallet Value
@@ -46,7 +47,13 @@ export function PortfolioCard() {
 
       <div className="p-5 font-mono">
         <div className="text-4xl font-bold tabular-nums">
-          {isLoading && !portfolio ? "…" : fmtUSD(portfolio?.totalValue ?? 0)}
+          {isLoading && !portfolio ? (
+            <span className="balance-skeleton inline-block h-9 w-36 rounded-md" />
+          ) : (
+            <span key={walletValue} className="live-number">
+              {walletValue}
+            </span>
+          )}
         </div>
 
         <div className="mt-5 border-t border-border pt-4">

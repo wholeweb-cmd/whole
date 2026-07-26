@@ -18,7 +18,7 @@ export function Sidebar({ onNavigate }: { onNavigate: () => void }) {
     <aside
       id="workspace-navigation"
       aria-label="Main navigation"
-      className="surface-panel fixed bottom-0 left-0 top-16 z-50 flex w-64 flex-col border-r border-border bg-background font-mono shadow-2xl shadow-black/40"
+      className="motion-drawer surface-panel fixed bottom-0 left-0 top-16 z-50 flex w-64 flex-col border-r border-border bg-background font-mono shadow-2xl shadow-black/40"
     >
       <div className="px-4 pb-3 pt-6">
         <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">

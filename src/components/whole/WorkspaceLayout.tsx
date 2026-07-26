@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { useRouterState } from "@tanstack/react-router";
 
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
@@ -11,6 +12,7 @@ import { ContextPanel } from "./ContextPanel";
  */
 export function WorkspaceLayout({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -27,7 +29,11 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
       <Header menuOpen={menuOpen} onMenuClick={() => setMenuOpen((open) => !open)} />
       <div className="flex min-h-0 flex-1">
-        <main className="min-w-0 flex-1 overflow-y-auto">{children}</main>
+        <main className="min-w-0 flex-1 overflow-y-auto">
+          <div key={pathname} className="route-enter min-h-full">
+            {children}
+          </div>
+        </main>
         <ContextPanel />
       </div>
 
@@ -37,7 +43,7 @@ export function WorkspaceLayout({ children }: { children: ReactNode }) {
             type="button"
             aria-label="Close navigation menu"
             onClick={() => setMenuOpen(false)}
-            className="fixed inset-x-0 bottom-0 top-16 z-40 cursor-default bg-black/60 backdrop-blur-[2px]"
+            className="motion-overlay fixed inset-x-0 bottom-0 top-16 z-40 cursor-default bg-black/60 backdrop-blur-[2px]"
           />
           <Sidebar onNavigate={() => setMenuOpen(false)} />
         </>

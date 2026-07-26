@@ -21,7 +21,7 @@ export function DisconnectWalletPopover({ children }: DisconnectWalletPopoverPro
         sideOffset={8}
         role="dialog"
         aria-label="Confirm wallet disconnect"
-        className="surface-panel w-48 border-border p-2 font-mono"
+        className="wallet-popover surface-panel w-48 border-border p-2 font-mono"
       >
         <p className="px-2 pb-2 pt-1 text-[11px] text-muted-foreground">Disconnect wallet?</p>
         <div className="flex flex-col">

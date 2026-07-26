@@ -37,6 +37,7 @@ export function TokenInput({
 }: Props) {
   const [open, setOpen] = useState(false);
   const balance = useSwapBalance(token);
+  const balanceText = balance.isError ? "—" : formatBalance(balance.value, balance.raw);
 
   return (
     <div className="surface-tile rounded-lg border border-border bg-background/40 p-5 font-mono transition-colors focus-within:border-border-strong">
@@ -45,11 +46,13 @@ export function TokenInput({
         <div className="flex items-center gap-2">
           <span className="text-[11px] text-muted-foreground">
             bal{" "}
-            {balance.isLoading
-              ? "…"
-              : balance.isError
-                ? "—"
-                : formatBalance(balance.value, balance.raw)}
+            {balance.isLoading ? (
+              <span className="balance-skeleton inline-block h-2.5 w-12 rounded-sm align-middle" />
+            ) : (
+              <span key={balanceText} className="live-number">
+                {balanceText}
+              </span>
+            )}
           </span>
           {showMax && !readonly && balance.raw > 0n && (
             <button

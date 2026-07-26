@@ -11,7 +11,7 @@ interface Props {
 
 export function TokenHeader({ symbol, market }: Props) {
   return (
-    <div className="surface-panel overflow-hidden rounded-xl border border-border">
+    <div className="motion-card surface-panel overflow-hidden rounded-xl border border-border">
       <div className="surface-head border-b border-border px-5 py-3 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
         <span className="text-primary">▍</span> Token / {market?.pair ?? symbol}
       </div>

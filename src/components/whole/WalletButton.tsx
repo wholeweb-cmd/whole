@@ -39,6 +39,7 @@ export function WalletButton() {
     addressLabel.length > 10
       ? `${addressLabel.slice(0, 6)}...${addressLabel.slice(-4)}`
       : addressLabel;
+  const balanceLabel = `${balance.value.toFixed(4)} ETH`;
 
   return (
     <DisconnectWalletPopover>
@@ -52,7 +53,13 @@ export function WalletButton() {
           <span className="font-mono text-[11px] font-medium">{short}</span>
 
           <span className="text-[10px] text-muted-foreground">
-            {walletLoading || balance.isLoading ? "…" : balance.value.toFixed(4)} ETH
+            {walletLoading || balance.isLoading ? (
+              <span className="balance-skeleton inline-block h-2 w-14 rounded-sm" />
+            ) : (
+              <span key={balanceLabel} className="live-number">
+                {balanceLabel}
+              </span>
+            )}
           </span>
         </div>
       </button>

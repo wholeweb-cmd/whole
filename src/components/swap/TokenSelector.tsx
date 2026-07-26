@@ -60,7 +60,7 @@ export function TokenSelector({ tokens, onSelect }: Props) {
   }, [q, tokens]);
 
   return (
-    <div className="surface-panel overflow-hidden rounded-lg border border-border">
+    <div className="surface-panel token-selector-enter overflow-hidden rounded-lg border border-border">
       <div className="surface-head flex items-center gap-2 border-b border-border px-4 py-2.5 focus-within:border-primary/60">
         <span className="font-mono text-primary">$</span>
         <Search className="h-3.5 w-3.5 text-muted-foreground" />

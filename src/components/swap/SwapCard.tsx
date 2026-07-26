@@ -34,6 +34,7 @@ export function SwapCard() {
   const [fromKey, setFromKey] = useState<string | null>(null);
   const [toKey, setToKey] = useState<string | null>(null);
   const [fromAmount, setFromAmount] = useState("");
+  const [reversing, setReversing] = useState(false);
 
   const defaultSlippage = useSettingsStore((s) => s.defaultSlippage);
   const [slippage, setSlippage] = useState(defaultSlippage);
@@ -76,6 +77,7 @@ export function SwapCard() {
   }, [fromToken?.address, toToken?.address, fromAmount]);
 
   function reverse() {
+    setReversing(true);
     setFromKey(toKey);
     setToKey(fromKey);
     setFromAmount("");
@@ -197,7 +199,7 @@ export function SwapCard() {
       : null;
 
   return (
-    <div className="surface-panel mx-auto w-full max-w-lg overflow-hidden rounded-xl border border-border">
+    <div className="motion-card surface-panel mx-auto w-full max-w-lg overflow-hidden rounded-xl border border-border">
       <div className="surface-head flex items-center justify-between border-b border-border px-5 py-3">
         <span className="font-mono text-[11px] font-semibold uppercase tracking-widest text-primary">
           ▍ Swap
@@ -223,8 +225,11 @@ export function SwapCard() {
           <button
             type="button"
             onClick={reverse}
+            onAnimationEnd={() => setReversing(false)}
             aria-label="Reverse swap direction"
-            className="glow-primary-hover grid h-10 w-10 place-items-center rounded-full border border-border bg-surface-raised text-primary hover:border-primary/60 hover:bg-primary/10"
+            className={`glow-primary-hover grid h-10 w-10 place-items-center rounded-full border border-border bg-surface-raised text-primary hover:border-primary/60 hover:bg-primary/10 ${
+              reversing ? "swap-reverse" : ""
+            }`}
           >
             ↕
           </button>
@@ -301,6 +306,7 @@ export function SwapCard() {
         <SwapButton
           disabled={disabled}
           loading={loading}
+          success={step === "success"}
           label={label}
           onClick={authenticated ? handleSwap : login}
         />

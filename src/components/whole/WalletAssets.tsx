@@ -14,6 +14,7 @@ export function WalletAssets() {
     .filter((asset) => asset.amount > 0)
     .sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
     .slice(0, 4);
+  const spendableValue = formatUSD(portfolio?.totalValue ?? 0);
 
   return (
     <Card title="Wallet Assets">
@@ -40,7 +41,13 @@ export function WalletAssets() {
                 Spendable value
               </p>
               <p className="mt-1 font-mono text-3xl font-semibold tracking-tight text-foreground">
-                {isLoading && !portfolio ? "…" : formatUSD(portfolio?.totalValue ?? 0)}
+                {isLoading && !portfolio ? (
+                  <span className="balance-skeleton inline-block h-7 w-28 rounded-md" />
+                ) : (
+                  <span key={spendableValue} className="live-number">
+                    {spendableValue}
+                  </span>
+                )}
               </p>
             </div>
             <p className="font-mono text-[10px] text-muted-foreground">

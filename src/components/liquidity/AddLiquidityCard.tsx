@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
-import { ChevronDown, Droplets, Info } from "lucide-react";
+import { CheckCircle2, ChevronDown, Droplets, Info, LoaderCircle } from "lucide-react";
 
 import { useSwapTokens } from "@/hooks/useSwapTokens";
 import { useResolvedToken } from "@/hooks/useResolvedToken";
@@ -147,7 +147,7 @@ export function AddLiquidityCard() {
     step === "success";
 
   return (
-    <div className="surface-panel w-full overflow-hidden rounded-xl border border-border font-mono">
+    <div className="motion-card surface-panel w-full overflow-hidden rounded-xl border border-border font-mono">
       <div className="surface-head flex items-center justify-between border-b border-border px-5 py-3">
         <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-primary">
           <Droplets className="h-3 w-3" /> Provide Liquidity
@@ -244,7 +244,14 @@ export function AddLiquidityCard() {
                 onClick={() => balanceA.raw > 0n && onAmountA(balanceA.exact)}
                 className="uppercase tracking-widest hover:text-primary"
               >
-                bal {balanceA.isLoading ? "…" : balanceA.value.toFixed(4)}
+                bal{" "}
+                {balanceA.isLoading ? (
+                  <span className="balance-skeleton inline-block h-2 w-12 rounded-sm" />
+                ) : (
+                  <span key={balanceA.value.toFixed(4)} className="live-number">
+                    {balanceA.value.toFixed(4)}
+                  </span>
+                )}
               </button>
             </div>
             <input
@@ -259,7 +266,14 @@ export function AddLiquidityCard() {
             <div className="mb-1 flex items-center justify-between text-[10px] text-muted-foreground">
               <span>{quote?.symbol ?? "Quote"}</span>
               <span className="uppercase tracking-widest">
-                bal {balanceB.isLoading ? "…" : balanceB.value.toFixed(4)}
+                bal{" "}
+                {balanceB.isLoading ? (
+                  <span className="balance-skeleton inline-block h-2 w-12 rounded-sm" />
+                ) : (
+                  <span key={balanceB.value.toFixed(4)} className="live-number">
+                    {balanceB.value.toFixed(4)}
+                  </span>
+                )}
               </span>
             </div>
             <input
@@ -309,13 +323,17 @@ export function AddLiquidityCard() {
           type="button"
           disabled={disabled}
           onClick={handleSubmit}
-          className={`mt-5 w-full rounded-lg py-4 text-sm font-semibold uppercase tracking-wide transition ${
+          className={`mt-5 flex w-full items-center justify-center gap-2 rounded-lg py-4 text-sm font-semibold uppercase tracking-wide transition ${
             disabled
-              ? "cursor-not-allowed bg-muted text-muted-foreground"
+              ? `cursor-not-allowed bg-muted text-muted-foreground ${
+                  loading ? "transaction-pulse" : ""
+                }`
               : "glow-primary glow-primary-hover bg-primary text-primary-foreground hover:opacity-95"
           }`}
         >
-          {label}
+          {loading && <LoaderCircle className="h-4 w-4 animate-spin" />}
+          {step === "success" && <CheckCircle2 className="success-pop h-4 w-4" />}
+          <span>{label}</span>
         </button>
       </div>
     </div>

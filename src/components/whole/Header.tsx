@@ -41,7 +41,7 @@ export function Header({ menuOpen, onMenuClick }: HeaderProps) {
         <Link
           to="/"
           aria-label="WHOLE home"
-          className="block h-11 w-11 shrink-0 overflow-hidden rounded-lg"
+          className="brand-orbit block h-11 w-11 shrink-0 overflow-hidden rounded-lg"
         >
           <img
             src="/brand/whole-logo-original.png"

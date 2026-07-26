@@ -13,7 +13,7 @@ export function Card({
 }) {
   return (
     <section
-      className={`surface-panel flex flex-col overflow-hidden rounded-xl border border-border ${className}`}
+      className={`motion-card surface-panel flex flex-col overflow-hidden rounded-xl border border-border ${className}`}
     >
       <header className="surface-head flex items-center border-b border-border px-5 py-3">
         <div className="flex items-center gap-2 overflow-hidden">
