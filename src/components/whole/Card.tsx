@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export function Card({
   title,
-  action,
+  action: _action,
   children,
   className = "",
 }: {
@@ -15,20 +15,12 @@ export function Card({
     <section
       className={`surface-panel flex flex-col overflow-hidden rounded-xl border border-border ${className}`}
     >
-      <header className="surface-head flex items-center justify-between border-b border-border px-5 py-3">
+      <header className="surface-head flex items-center border-b border-border px-5 py-3">
         <div className="flex items-center gap-2 overflow-hidden">
           <span className="text-primary/70">▍</span>
           <h3 className="truncate font-mono text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             {title}
           </h3>
-        </div>
-        <div className="flex items-center gap-2.5">
-          {action}
-          <span className="hidden items-center gap-1.5 sm:flex">
-            <span className="h-2 w-2 rounded-full bg-primary/70" />
-            <span className="h-2 w-2 rounded-full bg-border-strong" />
-            <span className="h-2 w-2 rounded-full bg-border-strong" />
-          </span>
         </div>
       </header>
       <div className="flex-1 p-5">{children}</div>
