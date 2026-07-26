@@ -47,7 +47,7 @@ export function TokenInput({
           <span className="text-[11px] text-muted-foreground">
             bal{" "}
             {balance.isLoading ? (
-              <span className="balance-skeleton inline-block h-2.5 w-12 rounded-sm align-middle" />
+              "…"
             ) : (
               <span key={balanceText} className="live-number">
                 {balanceText}

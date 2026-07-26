@@ -18,10 +18,8 @@ export function useNativeBalance(address?: `0x${string}`): TokenBalance {
     refetchOnReconnect: "always",
     refetchOnWindowFocus: "always",
     staleTime: 10_000,
-    // The transport already has a five-second timeout. A failed read should
-    // leave loading state immediately; the regular refresh will recover from
-    // a temporary RPC issue without trapping the UI in a long retry cycle.
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 5_000),
     queryFn: () => publicClient.getBalance({ address: address as `0x${string}` }),
   });
 

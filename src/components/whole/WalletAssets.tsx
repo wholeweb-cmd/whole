@@ -42,7 +42,7 @@ export function WalletAssets() {
               </p>
               <p className="mt-1 font-mono text-3xl font-semibold tracking-tight text-foreground">
                 {isLoading && !portfolio ? (
-                  <span className="balance-skeleton inline-block h-7 w-28 rounded-md" />
+                  "…"
                 ) : (
                   <span key={spendableValue} className="live-number">
                     {spendableValue}

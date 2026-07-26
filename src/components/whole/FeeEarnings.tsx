@@ -79,7 +79,7 @@ export function FeeEarnings() {
               </p>
               <p className="mt-1 font-mono text-2xl font-semibold text-primary">
                 {loading && positions.length === 0 ? (
-                  <span className="balance-skeleton inline-block h-6 w-20 rounded-md" />
+                  "…"
                 ) : (
                   <span key={totalLabel} className="live-number">
                     {totalLabel}

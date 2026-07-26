@@ -48,7 +48,7 @@ export function PortfolioCard() {
       <div className="p-5 font-mono">
         <div className="text-4xl font-bold tabular-nums">
           {isLoading && !portfolio ? (
-            <span className="balance-skeleton inline-block h-9 w-36 rounded-md" />
+            "…"
           ) : (
             <span key={walletValue} className="live-number">
               {walletValue}

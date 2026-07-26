@@ -54,7 +54,7 @@ export function WalletButton() {
 
           <span className="text-[10px] text-muted-foreground">
             {walletLoading || balance.isLoading ? (
-              <span className="balance-skeleton inline-block h-2 w-14 rounded-sm" />
+              "…"
             ) : (
               <span key={balanceLabel} className="live-number">
                 {balanceLabel}

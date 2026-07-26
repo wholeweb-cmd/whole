@@ -58,9 +58,8 @@ export function useERC20Balance(
     refetchOnReconnect: "always",
     refetchOnWindowFocus: "always",
     staleTime: 10_000,
-    // Fail fast after the transport timeout and let the scheduled refresh
-    // recover. Multiple initial retries made balance loading look endless.
-    retry: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 5_000),
     queryFn: async () => {
       const [raw, resolved] = await Promise.all([
         publicClient.readContract({

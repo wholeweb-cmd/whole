@@ -246,7 +246,7 @@ export function AddLiquidityCard() {
               >
                 bal{" "}
                 {balanceA.isLoading ? (
-                  <span className="balance-skeleton inline-block h-2 w-12 rounded-sm" />
+                  "…"
                 ) : (
                   <span key={balanceA.value.toFixed(4)} className="live-number">
                     {balanceA.value.toFixed(4)}
@@ -268,7 +268,7 @@ export function AddLiquidityCard() {
               <span className="uppercase tracking-widest">
                 bal{" "}
                 {balanceB.isLoading ? (
-                  <span className="balance-skeleton inline-block h-2 w-12 rounded-sm" />
+                  "…"
                 ) : (
                   <span key={balanceB.value.toFixed(4)} className="live-number">
                     {balanceB.value.toFixed(4)}
