@@ -21,6 +21,8 @@ export interface TokenBalance {
   /** Numeric form, for comparisons and display only. */
   value: number;
   isLoading: boolean;
+  /** True only when the latest read failed and no reliable value is available. */
+  isError: boolean;
 }
 
 export const ZERO_BALANCE: TokenBalance = {
@@ -29,6 +31,7 @@ export const ZERO_BALANCE: TokenBalance = {
   exact: "0",
   value: 0,
   isLoading: false,
+  isError: false,
 };
 
 /**
@@ -47,12 +50,16 @@ export function useERC20Balance(
 ): TokenBalance {
   const enabled = Boolean(token && wallet);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: [BALANCE_QUERY_KEY, "erc20", token?.toLowerCase(), wallet?.toLowerCase(), decimals],
     enabled,
     refetchInterval: REFRESH_MS,
     refetchIntervalInBackground: true,
+    refetchOnReconnect: "always",
+    refetchOnWindowFocus: "always",
     staleTime: 10_000,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 5_000),
     queryFn: async () => {
       const [raw, resolved] = await Promise.all([
         publicClient.readContract({
@@ -74,7 +81,13 @@ export function useERC20Balance(
     },
   });
 
-  if (!data) return { ...ZERO_BALANCE, isLoading: enabled && isLoading };
+  if (!data) {
+    return {
+      ...ZERO_BALANCE,
+      isLoading: enabled && isLoading,
+      isError: enabled && isError,
+    };
+  }
 
   const exact = formatUnits(data.raw, data.decimals);
 
@@ -84,5 +97,6 @@ export function useERC20Balance(
     exact,
     value: Number(exact),
     isLoading: false,
+    isError: false,
   };
 }

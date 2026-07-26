@@ -10,18 +10,35 @@ const REFRESH_MS = 20_000;
 export function useNativeBalance(address?: `0x${string}`): TokenBalance {
   const enabled = Boolean(address);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: [BALANCE_QUERY_KEY, "native", address?.toLowerCase()],
     enabled,
     refetchInterval: REFRESH_MS,
     refetchIntervalInBackground: true,
+    refetchOnReconnect: "always",
+    refetchOnWindowFocus: "always",
     staleTime: 10_000,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 5_000),
     queryFn: () => publicClient.getBalance({ address: address as `0x${string}` }),
   });
 
-  if (data == null) return { ...ZERO_BALANCE, isLoading: enabled && isLoading };
+  if (data == null) {
+    return {
+      ...ZERO_BALANCE,
+      isLoading: enabled && isLoading,
+      isError: enabled && isError,
+    };
+  }
 
   const exact = formatEther(data);
 
-  return { raw: data, decimals: 18, exact, value: Number(exact), isLoading: false };
+  return {
+    raw: data,
+    decimals: 18,
+    exact,
+    value: Number(exact),
+    isLoading: false,
+    isError: false,
+  };
 }

@@ -2,11 +2,12 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
 import { TokenIcon } from "@/components/markets/TokenIcon";
-import { useSwapBalance } from "@/hooks/useSwapBalance";
+import type { TokenBalance } from "@/hooks/useERC20Balance";
 import type { SwapToken } from "@/lib/uniswap/route";
 
 interface Props {
   tokens: SwapToken[];
+  getBalance(token: SwapToken | null): TokenBalance;
   onSelect(token: SwapToken): void;
 }
 
@@ -16,9 +17,15 @@ function fmtPrice(v: number | null) {
   return `$${v.toPrecision(3)}`;
 }
 
-function TokenRow({ token, onSelect }: { token: SwapToken; onSelect(t: SwapToken): void }) {
-  const balance = useSwapBalance(token);
-
+function TokenRow({
+  token,
+  balance,
+  onSelect,
+}: {
+  token: SwapToken;
+  balance: TokenBalance;
+  onSelect(t: SwapToken): void;
+}) {
   return (
     <button
       onClick={() => onSelect(token)}
@@ -33,7 +40,15 @@ function TokenRow({ token, onSelect }: { token: SwapToken; onSelect(t: SwapToken
       </div>
       <div className="shrink-0 text-right">
         <div className="text-xs tabular-nums">
-          {balance.raw > 0n ? balance.value.toFixed(4) : "—"}
+          {balance.isLoading ? (
+            "…"
+          ) : balance.isError ? (
+            <span className="text-primary">retry</span>
+          ) : balance.raw > 0n ? (
+            balance.value.toFixed(4)
+          ) : (
+            "—"
+          )}
         </div>
         <div className="text-[10px] tabular-nums text-muted-foreground">
           {fmtPrice(token.price)}
@@ -43,7 +58,7 @@ function TokenRow({ token, onSelect }: { token: SwapToken; onSelect(t: SwapToken
   );
 }
 
-export function TokenSelector({ tokens, onSelect }: Props) {
+export function TokenSelector({ tokens, getBalance, onSelect }: Props) {
   const [q, setQ] = useState("");
 
   const filtered = useMemo(() => {
@@ -85,6 +100,7 @@ export function TokenSelector({ tokens, onSelect }: Props) {
             <TokenRow
               key={token.isNative ? "eth" : token.address}
               token={token}
+              balance={getBalance(token)}
               onSelect={onSelect}
             />
           ))
