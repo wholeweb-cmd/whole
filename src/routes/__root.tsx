@@ -92,6 +92,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Trade, provide liquidity, and explore markets on Robinhood Chain.",
       },
       { name: "author", content: "WHOLE" },
+      {
+        name: "virtual-protocol-site-verification",
+        content: "06f366031ec64980d1755b24d4e7d4f1",
+      },
       { property: "og:title", content: "WHOLE" },
       {
         property: "og:description",
