@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { useWallets } from "@privy-io/react-auth";
 import { formatUnits } from "viem";
 
-import { publicClient } from "@/lib/web3/client";
-import { ERC20_ABI } from "@/lib/uniswap/abi/erc20";
+import { fetchWalletBalance } from "@/functions/balance";
+import { getConnectedTokenBalance } from "@/lib/web3/connectedBalance";
 
 /** Query key prefix, so a completed transaction can invalidate every balance. */
 export const BALANCE_QUERY_KEY = "wallet-balance";
@@ -49,6 +50,10 @@ export function useERC20Balance(
   decimals?: number,
 ): TokenBalance {
   const enabled = Boolean(token && wallet);
+  const { wallets } = useWallets();
+  const connection = wallets.find(
+    (candidate) => candidate.address.toLowerCase() === wallet?.toLowerCase(),
+  );
 
   const { data, isLoading, isError } = useQuery({
     queryKey: [BALANCE_QUERY_KEY, "erc20", token?.toLowerCase(), wallet?.toLowerCase(), decimals],
@@ -61,23 +66,29 @@ export function useERC20Balance(
     retry: 2,
     retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 5_000),
     queryFn: async () => {
-      const [raw, resolved] = await Promise.all([
-        publicClient.readContract({
-          address: token as `0x${string}`,
-          abi: ERC20_ABI,
-          functionName: "balanceOf",
-          args: [wallet as `0x${string}`],
-        }),
-        decimals != null
-          ? Promise.resolve(decimals)
-          : publicClient.readContract({
-              address: token as `0x${string}`,
-              abi: ERC20_ABI,
-              functionName: "decimals",
-            }),
-      ]);
+      if (connection) {
+        try {
+          return await getConnectedTokenBalance(
+            connection,
+            token as `0x${string}`,
+            wallet as `0x${string}`,
+            decimals,
+          );
+        } catch {
+          // Some injected wallets do not expose read calls. The server-side
+          // explorer snapshot below is the reliable fallback for those wallets.
+        }
+      }
 
-      return { raw: raw as bigint, decimals: Number(resolved) };
+      const result = await fetchWalletBalance({
+        data: {
+          wallet: wallet as string,
+          token: token as string,
+          decimals: decimals ?? 18,
+        },
+      });
+
+      return { raw: BigInt(result.raw), decimals: result.decimals };
     },
   });
 

@@ -2,11 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { formatUnits } from "viem";
 import { z } from "zod";
 
-import { publicClient } from "@/lib/web3/client";
-import { ERC20_ABI } from "@/lib/uniswap/abi/erc20";
+import { getWalletBalanceSnapshot } from "@/lib/explorer/balances";
 import { getPositionsForOwner } from "@/lib/uniswap/liquidity";
 import { getTokenPriceUSD } from "@/lib/uniswap/market";
-import { getTokenMeta } from "@/lib/uniswap/tokenMeta";
 import { TOKENS } from "@/lib/tokens/index";
 
 export interface PortfolioAsset {
@@ -41,41 +39,34 @@ export const fetchPortfolio = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<PortfolioData> => {
     const wallet = data.address as `0x${string}`;
 
-    const [balances, positions] = await Promise.all([
-      Promise.all(
-        TOKENS.map(async (token) => {
-          const metadataAddress = token.isNative ? token.wrapped : token.address;
-          const [rawBalance, price, metadata] = await Promise.all([
-            token.isNative
-              ? publicClient.getBalance({ address: wallet })
-              : publicClient.readContract({
-                  address: token.address,
-                  abi: ERC20_ABI,
-                  functionName: "balanceOf",
-                  args: [wallet],
-                }),
-            getTokenPriceUSD(token.symbol),
-            metadataAddress
-              ? getTokenMeta(metadataAddress).catch(() => null)
-              : Promise.resolve(null),
-          ]);
-
-          const amount = Number(formatUnits(rawBalance, token.decimals));
-
-          const asset: PortfolioAsset = {
-            symbol: token.symbol,
-            name: token.name,
-            logo: metadata?.logo ?? token.logo ?? null,
-            amount,
-            price,
-            value: price != null ? amount * price : null,
-          };
-
-          return asset;
-        }),
-      ),
-      getPositionsForOwner(wallet),
+    const [snapshot, positions] = await Promise.all([
+      getWalletBalanceSnapshot(wallet),
+      getPositionsForOwner(wallet).catch(() => []),
     ]);
+
+    const balances = await Promise.all(
+      TOKENS.map(async (token) => {
+        const metadataAddress = token.isNative ? token.wrapped : token.address;
+        const tokenSnapshot = metadataAddress
+          ? snapshot.tokens.get(metadataAddress.toLowerCase())
+          : undefined;
+        const rawBalance = token.isNative ? snapshot.native : (tokenSnapshot?.raw ?? 0n);
+        const price = await getTokenPriceUSD(token.symbol);
+
+        const amount = Number(formatUnits(rawBalance, token.decimals));
+
+        const asset: PortfolioAsset = {
+          symbol: token.symbol,
+          name: token.name,
+          logo: tokenSnapshot?.iconUrl ?? token.logo ?? null,
+          amount,
+          price,
+          value: price != null ? amount * price : null,
+        };
+
+        return asset;
+      }),
+    );
 
     const totalValue = balances.reduce((sum, asset) => sum + (asset.value ?? 0), 0);
 
