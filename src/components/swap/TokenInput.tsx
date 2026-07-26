@@ -3,7 +3,7 @@ import { ChevronDown } from "lucide-react";
 
 import { TokenSelector } from "./TokenSelector";
 import { TokenIcon } from "@/components/markets/TokenIcon";
-import type { TokenBalance } from "@/hooks/useERC20Balance";
+import { useSwapBalance } from "@/hooks/useSwapBalance";
 import type { SwapToken } from "@/lib/uniswap/route";
 
 interface Props {
@@ -16,9 +16,12 @@ interface Props {
   readonly?: boolean;
   showMax?: boolean;
   usdValue?: number | null;
-  balance: TokenBalance;
-  getBalance(token: SwapToken | null): TokenBalance;
-  onRefreshBalance(): void;
+}
+
+function formatBalance(value: number, raw: bigint) {
+  if (raw === 0n) return "0.0000";
+  if (value > 0 && value < 0.0001) return "<0.0001";
+  return value.toLocaleString(undefined, { maximumFractionDigits: 4 });
 }
 
 export function TokenInput({
@@ -31,11 +34,9 @@ export function TokenInput({
   readonly = false,
   showMax = false,
   usdValue,
-  balance,
-  getBalance,
-  onRefreshBalance,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const balance = useSwapBalance(token);
 
   return (
     <div className="surface-tile rounded-lg border border-border bg-background/40 p-5 font-mono transition-colors focus-within:border-border-strong">
@@ -43,17 +44,12 @@ export function TokenInput({
         <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</span>
         <div className="flex items-center gap-2">
           <span className="text-[11px] text-muted-foreground">
-            {balance.isError ? (
-              <button
-                type="button"
-                onClick={onRefreshBalance}
-                className="text-primary transition hover:text-primary/80"
-              >
-                retry balance
-              </button>
-            ) : (
-              <>bal {balance.isLoading ? "…" : balance.value.toFixed(4)}</>
-            )}
+            bal{" "}
+            {balance.isLoading
+              ? "…"
+              : balance.isError
+                ? "—"
+                : formatBalance(balance.value, balance.raw)}
           </span>
           {showMax && !readonly && balance.raw > 0n && (
             <button
@@ -105,7 +101,6 @@ export function TokenInput({
         <div className="mt-3">
           <TokenSelector
             tokens={tokens}
-            getBalance={getBalance}
             onSelect={(t) => {
               onChange(t);
               setOpen(false);

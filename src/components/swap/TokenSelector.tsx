@@ -2,12 +2,10 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
 import { TokenIcon } from "@/components/markets/TokenIcon";
-import type { TokenBalance } from "@/hooks/useERC20Balance";
 import type { SwapToken } from "@/lib/uniswap/route";
 
 interface Props {
   tokens: SwapToken[];
-  getBalance(token: SwapToken | null): TokenBalance;
   onSelect(token: SwapToken): void;
 }
 
@@ -19,11 +17,9 @@ function fmtPrice(v: number | null) {
 
 function TokenRow({
   token,
-  balance,
   onSelect,
 }: {
   token: SwapToken;
-  balance: TokenBalance;
   onSelect(t: SwapToken): void;
 }) {
   return (
@@ -39,17 +35,6 @@ function TokenRow({
         </div>
       </div>
       <div className="shrink-0 text-right">
-        <div className="text-xs tabular-nums">
-          {balance.isLoading ? (
-            "…"
-          ) : balance.isError ? (
-            <span className="text-primary">retry</span>
-          ) : balance.raw > 0n ? (
-            balance.value.toFixed(4)
-          ) : (
-            "—"
-          )}
-        </div>
         <div className="text-[10px] tabular-nums text-muted-foreground">
           {fmtPrice(token.price)}
         </div>
@@ -58,7 +43,7 @@ function TokenRow({
   );
 }
 
-export function TokenSelector({ tokens, getBalance, onSelect }: Props) {
+export function TokenSelector({ tokens, onSelect }: Props) {
   const [q, setQ] = useState("");
 
   const filtered = useMemo(() => {
@@ -100,7 +85,6 @@ export function TokenSelector({ tokens, getBalance, onSelect }: Props) {
             <TokenRow
               key={token.isNative ? "eth" : token.address}
               token={token}
-              balance={getBalance(token)}
               onSelect={onSelect}
             />
           ))

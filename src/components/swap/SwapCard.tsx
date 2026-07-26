@@ -4,7 +4,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { useSwapTokens } from "@/hooks/useSwapTokens";
 import { useSwapQuote } from "@/hooks/useSwapQuote";
 import { useSwapExecute } from "@/hooks/useSwapExecute";
-import { useSwapBalances } from "@/hooks/useSwapBalances";
+import { useSwapBalance } from "@/hooks/useSwapBalance";
 import { useSettingsStore } from "@/lib/store/settingsStore";
 import { useSwapPreviewStore } from "@/lib/store/swapPreviewStore";
 import { SERVICE_FEE_PERCENT } from "@/lib/config/swapFee";
@@ -68,8 +68,7 @@ export function SwapCard() {
   } = useSwapQuote(fromToken, toToken, fromAmount, nativePrice);
 
   const { execute, step, error, reset } = useSwapExecute();
-  const swapBalances = useSwapBalances(tokens);
-  const balance = swapBalances.getBalance(fromToken);
+  const balance = useSwapBalance(fromToken);
 
   useEffect(() => {
     if (step !== "idle") reset();
@@ -218,9 +217,6 @@ export function SwapCard() {
           onChange={(t) => setFromKey(keyOf(t))}
           usdValue={fromUsd}
           showMax
-          balance={balance}
-          getBalance={swapBalances.getBalance}
-          onRefreshBalance={() => void swapBalances.refresh()}
         />
 
         <div className="my-3 flex justify-center">
@@ -243,9 +239,6 @@ export function SwapCard() {
           onChange={(t) => setToKey(keyOf(t))}
           usdValue={toUsd}
           readonly
-          balance={swapBalances.getBalance(toToken)}
-          getBalance={swapBalances.getBalance}
-          onRefreshBalance={() => void swapBalances.refresh()}
         />
 
         <div className="surface-tile mt-4 space-y-2.5 rounded-lg border border-border bg-background/40 p-5 font-mono text-xs [&_span:last-child]:tabular-nums">
