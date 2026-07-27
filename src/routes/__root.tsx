@@ -94,7 +94,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "author", content: "WHOLE" },
       {
         name: "virtual-protocol-site-verification",
-        content: "06f366031ec64980d1755b24d4e7d4f1",
+        content: "c928bda70cad547e2e3680a4c760efb8",
       },
       { property: "og:title", content: "WHOLE" },
       {
